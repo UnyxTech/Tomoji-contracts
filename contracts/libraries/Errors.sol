@@ -3,23 +3,18 @@
 pragma solidity ^0.8.17;
 
 library Errors {
-    error LengthError();
-    error AlreadyMint();
+    error ArrayLengthError();
+    error InvaildId();
     error OnlyCallByFactory();
-    error AlreadyExpired();
-    error InvalidSignature();
-    error InvalidFee();
-    error InvalidChainId();
-    error InvalidEVMAddress();
-    error InvalidBTCAddress();
-    error ExceedMaxSupply();
-    error InvalidTicker();
-    error TickerAlreadyExist();
-    error Unauthorized();
+    error NotExist();
+    error ZeroAddress();
 
     error NotFound();
     error ContractAlreadyExist();
-    error InvalidRecipient();
-    error InvalidSender();
-    error UnsafeRecipient();
+
+    error EmptyMerkleRoot();
+    error AlreadyFinish();
+    error NotEnough();
+    error AlreadyClaimed();
+    error MerkleProofVerifyFailed();
 }

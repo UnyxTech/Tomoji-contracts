@@ -20,7 +20,7 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         string memory baseUri,
         address creator,
         uint8 decimals,
-        uint256 totalSupply,
+        uint256 nftTotalSupply,
         uint256 units
     ) external onlyOwner returns (address erc404) {
         if (_erc404Contract[creator][name] != address(0x0)) {
@@ -32,7 +32,7 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
             baseUri: baseUri,
             creator: creator,
             decimals: decimals,
-            totalSupply: totalSupply,
+            nftTotalSupply: nftTotalSupply,
             units: units
         });
         erc404 = address(
@@ -46,7 +46,7 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
             erc404,
             creator,
             decimals,
-            totalSupply,
+            nftTotalSupply,
             units,
             name,
             symbol
@@ -59,7 +59,7 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         string calldata _tokenURI
     ) public onlyOwner {
         if (_erc404Contract[creator][name] == address(0x0)) {
-            revert Errors.InvalidTicker();
+            revert Errors.ZeroAddress();
         }
         TomoERC404(_erc404Contract[creator][name]).setTokenURI(_tokenURI);
     }
@@ -71,8 +71,15 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         bool state
     ) public onlyOwner {
         if (_erc404Contract[creator][name] == address(0x0)) {
-            revert Errors.InvalidTicker();
+            revert Errors.ZeroAddress();
         }
         TomoERC404(_erc404Contract[creator][name]).setWhitelist(target, state);
+    }
+
+    function erc404Contract(
+        address creator,
+        string calldata name
+    ) external view returns (address) {
+        return _erc404Contract[creator][name];
     }
 }

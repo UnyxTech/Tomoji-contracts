@@ -20,15 +20,19 @@ contract TomoERC404 is ERC404 {
     }
 
     constructor() {
+        uint256 nftSupply;
         (
             name,
             symbol,
             baseTokenURI,
             creator,
             decimals,
-            totalSupply,
+            nftSupply,
             units
         ) = ITomoERC404Factory(msg.sender)._parameters();
+
+        totalSupply = nftSupply * units;
+        balanceOf[creator] = totalSupply;
 
         factory = msg.sender;
     }
