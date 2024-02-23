@@ -37,6 +37,29 @@ contract TomoERC404 is ERC404 {
         factory = msg.sender;
     }
 
+    function multiTransferFrom(
+        address from_,
+        address[] memory to_,
+        uint256 valueOrId_
+    ) public virtual returns (bool) {
+        for (uint256 i = 0; i < to_.length; i++) {
+            transferFrom(from_, to_[i], valueOrId_);
+        }
+
+        return true;
+    }
+
+    function multiTransfer(
+        address[] memory to_,
+        uint256 valueOrId_
+    ) public virtual returns (bool) {
+        for (uint256 i = 0; i < to_.length; i++) {
+            transfer(to_[i], valueOrId_);
+        }
+
+        return true;
+    }
+
     /**************Only Call By Factory Function **********/
 
     function setTokenURI(string memory _tokenURI) public onlyFactory {
