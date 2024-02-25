@@ -4,18 +4,6 @@ pragma solidity ^0.8.20;
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 
 interface IERC404 is IERC165 {
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 value
-    );
-    event Transfer(address indexed from, address indexed to, uint256 amount);
-    event ApprovalForAll(
-        address indexed owner,
-        address indexed operator,
-        bool approved
-    );
-
     error NotFound();
     error InvalidTokenId();
     error AlreadyExists();

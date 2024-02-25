@@ -5,6 +5,8 @@ import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receive
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC404} from "./interfaces/IERC404.sol";
 import {DoubleEndedQueue} from "./libraries/DoubleEndedQueue.sol";
+import {ERC721Events} from "./libraries/ERC721Events.sol";
+import {ERC20Events} from "./libraries/ERC20Events.sol";
 
 abstract contract ERC404 is IERC404 {
     using DoubleEndedQueue for DoubleEndedQueue.Uint256Deque;
@@ -19,10 +21,10 @@ abstract contract ERC404 is IERC404 {
     string public symbol;
 
     /// @dev Decimals for ERC-20 representation
-    uint8 public immutable decimals;
+    uint8 public decimals;
 
     /// @dev Units for ERC-20 representation
-    uint256 public immutable units;
+    uint256 public units;
 
     /// @dev Total supply in ERC-20 representation
     uint256 public totalSupply;
@@ -172,7 +174,7 @@ abstract contract ERC404 is IERC404 {
 
         getApproved[id_] = spender_;
 
-        emit Approval(erc721Owner, spender_, id_);
+        emit ERC721Events.Approval(erc721Owner, spender_, id_);
     }
 
     /// @dev Providing type(uint256).max for approval value results in an
@@ -188,7 +190,7 @@ abstract contract ERC404 is IERC404 {
 
         allowance[msg.sender][spender_] = value_;
 
-        emit Approval(msg.sender, spender_, value_);
+        emit ERC20Events.Approval(msg.sender, spender_, value_);
 
         return true;
     }
@@ -203,7 +205,7 @@ abstract contract ERC404 is IERC404 {
             revert InvalidOperator();
         }
         isApprovedForAll[msg.sender][operator_] = approved_;
-        emit ApprovalForAll(msg.sender, operator_, approved_);
+        emit ERC721Events.ApprovalForAll(msg.sender, operator_, approved_);
     }
 
     /// @notice Function for mixed transfers from an operator that may be different than 'from'.
@@ -412,7 +414,7 @@ abstract contract ERC404 is IERC404 {
             allowance[recoveredAddress][spender_] = value_;
         }
 
-        emit Approval(owner_, spender_, value_);
+        emit ERC20Events.Approval(owner_, spender_, value_);
     }
 
     /// @notice Returns domain initial domain separator, or recomputes if chain id is not equal to initial chain id
@@ -489,7 +491,7 @@ abstract contract ERC404 is IERC404 {
             balanceOf[to_] += value_;
         }
 
-        emit Transfer(from_, to_, value_);
+        emit ERC20Events.Transfer(from_, to_, value_);
     }
 
     /// @notice Consolidated record keeping function for transferring ERC-721s.
@@ -533,7 +535,7 @@ abstract contract ERC404 is IERC404 {
             delete _ownedData[id_];
         }
 
-        emit Transfer(from_, to_, id_);
+        emit ERC721Events.Transfer(from_, to_, id_);
     }
 
     /// @notice Internal function for ERC-20 transfers. Also handles any ERC-721 transfers that may be required.
