@@ -12,6 +12,8 @@ library Errors {
     error NotFound();
     error ContractAlreadyExist();
 
+    error ReservedTooMuch();
+
     error EmptyMerkleRoot();
     error AlreadyFinish();
     error NotEnough();

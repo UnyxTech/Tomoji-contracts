@@ -10,11 +10,14 @@ pragma solidity ^0.8.17;
  */
 library DataTypes {
     struct CreateERC404Parameters {
+        address creator;
+        uint256 nftTotalSupply;
+        uint256 reserved;
+        uint256 units;
+        uint256 price;
         string name;
         string symbol;
         string baseUri;
-        address creator;
-        uint256 nftTotalSupply;
-        uint256 units;
+        string contractURI;
     }
 }

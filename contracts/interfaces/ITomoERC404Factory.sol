@@ -6,12 +6,15 @@ interface ITomoERC404Factory {
         external
         view
         returns (
-            string memory name,
-            string memory symbol,
-            string memory baseUri,
             address creator,
             uint256 nftTotalSupply,
-            uint256 nftUnit
+            uint256 reserved,
+            uint256 nftUnit,
+            uint256 price,
+            string calldata name,
+            string calldata symbol,
+            string calldata baseUri,
+            string calldata contractURI
         );
 
     function erc404Contract(

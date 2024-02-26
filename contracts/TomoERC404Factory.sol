@@ -15,36 +15,33 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
     constructor(address owner) Ownable(owner) {}
 
     function createERC404(
-        string memory name,
-        string memory symbol,
-        string memory baseUri,
-        address creator,
-        uint256 nftTotalSupply,
-        uint256 units
+        DataTypes.CreateERC404Parameters calldata vars
     ) external returns (address erc404) {
-        if (_erc404Contract[creator][name] != address(0x0)) {
+        if (vars.reserved >= vars.nftTotalSupply) {
+            revert Errors.ReservedTooMuch();
+        }
+        if (_erc404Contract[vars.creator][vars.name] != address(0x0)) {
             revert Errors.ContractAlreadyExist();
         }
-        _parameters = DataTypes.CreateERC404Parameters({
-            name: name,
-            symbol: symbol,
-            baseUri: baseUri,
-            creator: creator,
-            nftTotalSupply: nftTotalSupply,
-            units: units
-        });
+        _parameters = vars;
         erc404 = address(
-            new TomoERC404{salt: keccak256(abi.encode(name, symbol, creator))}()
+            new TomoERC404{
+                salt: keccak256(
+                    abi.encode(vars.name, vars.symbol, vars.creator)
+                )
+            }()
         );
-        _erc404Contract[creator][name] = erc404;
+        _erc404Contract[vars.creator][vars.name] = erc404;
         delete _parameters;
         emit Events.ERC404Created(
             erc404,
-            creator,
-            nftTotalSupply,
-            units,
-            name,
-            symbol
+            vars.creator,
+            vars.nftTotalSupply,
+            vars.reserved,
+            vars.units,
+            vars.price,
+            vars.name,
+            vars.symbol
         );
     }
 

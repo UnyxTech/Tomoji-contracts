@@ -11,6 +11,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract TomoERC404 is ERC404, Ownable {
     string public baseTokenURI;
     string public contractURI;
+    uint256 public mintPrice;
+    uint256 public launchpadAmount;
     address public immutable creator;
     address public immutable factory;
 
@@ -23,18 +25,23 @@ contract TomoERC404 is ERC404, Ownable {
 
     constructor() Ownable(msg.sender) {
         uint256 nftSupply;
+        uint256 reserved;
         decimals = 18;
         (
+            creator,
+            nftSupply,
+            reserved,
+            units,
+            mintPrice,
             name,
             symbol,
             baseTokenURI,
-            creator,
-            nftSupply,
-            units
+            contractURI
         ) = ITomoERC404Factory(msg.sender)._parameters();
 
         totalSupply = nftSupply * units;
-        balanceOf[creator] = totalSupply;
+        balanceOf[creator] = reserved * units;
+        launchpadAmount = (nftSupply - reserved) * units;
 
         factory = msg.sender;
         _transferOwnership(creator);
@@ -42,7 +49,7 @@ contract TomoERC404 is ERC404, Ownable {
 
     function multiTransferFrom(
         address from_,
-        address[] memory to_,
+        address[] calldata to_,
         uint256 valueOrId_
     ) public virtual returns (bool) {
         for (uint256 i = 0; i < to_.length; i++) {
@@ -53,13 +60,34 @@ contract TomoERC404 is ERC404, Ownable {
     }
 
     function multiTransfer(
-        address[] memory to_,
+        address[] calldata to_,
         uint256 valueOrId_
     ) public virtual returns (bool) {
         for (uint256 i = 0; i < to_.length; i++) {
             transfer(to_[i], valueOrId_);
         }
 
+        return true;
+    }
+
+    function mint(uint256 mintAmount_) public virtual returns (bool) {
+        uint256 buyAmount = mintAmount_ * units;
+        if (buyAmount > launchpadAmount) {
+            revert Errors.NotEnough();
+        }
+        balanceOf[msg.sender] += buyAmount;
+        launchpadAmount -= buyAmount;
+        return true;
+    }
+
+    function stopLaunchpad() public virtual onlyOwner returns (bool) {
+        if (launchpadAmount == 0) {
+            revert Errors.AlreadyFinish();
+        }
+        if (launchpadAmount > 0) {
+            balanceOf[creator] += launchpadAmount;
+        }
+        launchpadAmount = 0;
         return true;
     }
 
