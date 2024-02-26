@@ -19,7 +19,6 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         string memory symbol,
         string memory baseUri,
         address creator,
-        uint8 decimals,
         uint256 nftTotalSupply,
         uint256 units
     ) external returns (address erc404) {
@@ -31,21 +30,17 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
             symbol: symbol,
             baseUri: baseUri,
             creator: creator,
-            decimals: decimals,
             nftTotalSupply: nftTotalSupply,
             units: units
         });
         erc404 = address(
-            new TomoERC404{
-                salt: keccak256(abi.encode(name, symbol, decimals, creator))
-            }()
+            new TomoERC404{salt: keccak256(abi.encode(name, symbol, creator))}()
         );
         _erc404Contract[creator][name] = erc404;
         delete _parameters;
         emit Events.ERC404Created(
             erc404,
             creator,
-            decimals,
             nftTotalSupply,
             units,
             name,

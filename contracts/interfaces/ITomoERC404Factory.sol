@@ -10,7 +10,6 @@ interface ITomoERC404Factory {
             string memory symbol,
             string memory baseUri,
             address creator,
-            uint8 decimals,
             uint256 nftTotalSupply,
             uint256 nftUnit
         );

@@ -12,7 +12,6 @@ library Events {
     event ERC404Created(
         address indexed addr,
         address indexed creator,
-        uint256 decimals,
         uint256 totalSupply,
         uint256 nftUnit,
         string name,

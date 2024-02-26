@@ -13,7 +13,6 @@ contract TomoERC404 is ERC404, Ownable {
     string public contractURI;
     address public immutable creator;
     address public immutable factory;
-    //address public constant initialOwner = address(0x0);
 
     modifier onlyFactory() {
         if (msg.sender != factory) {
@@ -24,12 +23,12 @@ contract TomoERC404 is ERC404, Ownable {
 
     constructor() Ownable(msg.sender) {
         uint256 nftSupply;
+        decimals = 18;
         (
             name,
             symbol,
             baseTokenURI,
             creator,
-            decimals,
             nftSupply,
             units
         ) = ITomoERC404Factory(msg.sender)._parameters();

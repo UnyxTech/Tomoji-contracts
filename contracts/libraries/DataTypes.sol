@@ -14,7 +14,6 @@ library DataTypes {
         string symbol;
         string baseUri;
         address creator;
-        uint256 decimals;
         uint256 nftTotalSupply;
         uint256 units;
     }
