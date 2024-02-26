@@ -12,7 +12,6 @@ contract TomoERC404 is ERC404, Ownable {
     string public baseTokenURI;
     string public contractURI;
     uint256 public mintPrice;
-    uint256 public launchpadAmount;
     address public immutable creator;
     address public immutable factory;
 
@@ -40,8 +39,10 @@ contract TomoERC404 is ERC404, Ownable {
         ) = ITomoERC404Factory(msg.sender)._parameters();
 
         totalSupply = nftSupply * units;
+        _erc721TransferExempt[address(this)] = true;
+        _erc721TransferExempt[creator] = true;
         balanceOf[creator] = reserved * units;
-        launchpadAmount = (nftSupply - reserved) * units;
+        balanceOf[address(this)] = (nftSupply - reserved) * units;
 
         factory = msg.sender;
         _transferOwnership(creator);
@@ -72,22 +73,25 @@ contract TomoERC404 is ERC404, Ownable {
 
     function mint(uint256 mintAmount_) public virtual returns (bool) {
         uint256 buyAmount = mintAmount_ * units;
-        if (buyAmount > launchpadAmount) {
+        if (buyAmount > balanceOf[address(this)]) {
             revert Errors.NotEnough();
         }
-        balanceOf[msg.sender] += buyAmount;
-        launchpadAmount -= buyAmount;
+        _transferERC20WithERC721(address(this), msg.sender, buyAmount);
         return true;
     }
 
     function stopLaunchpad() public virtual onlyOwner returns (bool) {
-        if (launchpadAmount == 0) {
+        if (balanceOf[address(this)] == 0) {
             revert Errors.AlreadyFinish();
         }
-        if (launchpadAmount > 0) {
-            balanceOf[creator] += launchpadAmount;
+        if (balanceOf[address(this)] > 0) {
+            _transferERC20WithERC721(
+                address(this),
+                creator,
+                balanceOf[address(this)]
+            );
         }
-        launchpadAmount = 0;
+        balanceOf[address(this)] = 0;
         return true;
     }
 
