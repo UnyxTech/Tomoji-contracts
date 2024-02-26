@@ -38,11 +38,10 @@ contract TomoERC404 is ERC404, Ownable {
             contractURI
         ) = ITomoERC404Factory(msg.sender)._parameters();
 
-        totalSupply = nftSupply * units;
-        _erc721TransferExempt[address(this)] = true;
-        _erc721TransferExempt[creator] = true;
-        balanceOf[creator] = reserved * units;
-        balanceOf[address(this)] = (nftSupply - reserved) * units;
+        _setERC721TransferExempt(creator, true);
+        _setERC721TransferExempt(address(this), true);
+        _mintERC20(creator, reserved * units);
+        _mintERC20(address(this), (nftSupply - reserved) * units);
 
         factory = msg.sender;
         _transferOwnership(creator);
