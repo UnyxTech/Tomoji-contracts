@@ -45,14 +45,30 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         );
     }
 
-    function setTokenURI(
+    function setContractURI(
+        address creator,
         string calldata name,
-        string calldata _tokenURI
-    ) public {
-        if (_erc404Contract[msg.sender][name] == address(0x0)) {
+        string calldata newContractUri
+    ) public onlyOwner returns (bool) {
+        if (_erc404Contract[creator][name] == address(0x0)) {
             revert Errors.ZeroAddress();
         }
-        TomoERC404(_erc404Contract[msg.sender][name]).setTokenURI(_tokenURI);
+        TomoERC404(_erc404Contract[creator][name]).setContractURI(
+            newContractUri
+        );
+        return true;
+    }
+
+    function setTokenURI(
+        address creator,
+        string calldata name,
+        string calldata _tokenURI
+    ) public onlyOwner returns (bool) {
+        if (_erc404Contract[creator][name] == address(0x0)) {
+            revert Errors.ZeroAddress();
+        }
+        TomoERC404(_erc404Contract[creator][name]).setTokenURI(_tokenURI);
+        return true;
     }
 
     function erc404Contract(

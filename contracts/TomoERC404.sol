@@ -103,7 +103,7 @@ contract TomoERC404 is ERC404, Ownable {
         return true;
     }
 
-    function setTokenURI(string memory _tokenURI) public onlyFactory {
+    function setTokenURI(string calldata _tokenURI) public onlyFactory {
         baseTokenURI = _tokenURI;
     }
 
