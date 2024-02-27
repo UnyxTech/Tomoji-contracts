@@ -11,7 +11,10 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract TomoERC404 is ERC404, Ownable {
     string public baseTokenURI;
     string public contractURI;
+    uint256 public maxPerWallet;
     uint256 public mintPrice;
+
+    mapping(address => uint) mintAccount;
     address public immutable creator;
     address public immutable factory;
 
@@ -30,6 +33,7 @@ contract TomoERC404 is ERC404, Ownable {
             creator,
             nftSupply,
             reserved,
+            maxPerWallet,
             units,
             mintPrice,
             name,
@@ -70,7 +74,13 @@ contract TomoERC404 is ERC404, Ownable {
         return true;
     }
 
-    function mint(uint256 mintAmount_) public virtual returns (bool) {
+    function mint(uint256 mintAmount_) public payable virtual returns (bool) {
+        if (mintAmount_ == 0 || msg.value < mintPrice * mintAmount_) {
+            revert Errors.InvaildParam();
+        }
+        if (mintAccount[msg.sender] + mintAmount_ >= maxPerWallet) {
+            revert Errors.ReachMaxPerMint();
+        }
         uint256 buyAmount = mintAmount_ * units;
         if (buyAmount > balanceOf[address(this)]) {
             revert Errors.NotEnough();

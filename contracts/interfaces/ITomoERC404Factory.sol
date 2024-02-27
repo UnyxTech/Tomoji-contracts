@@ -9,6 +9,7 @@ interface ITomoERC404Factory {
             address creator,
             uint256 nftTotalSupply,
             uint256 reserved,
+            uint256 maxPerWallet,
             uint256 nftUnit,
             uint256 price,
             string calldata name,

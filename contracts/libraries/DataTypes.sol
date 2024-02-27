@@ -13,6 +13,7 @@ library DataTypes {
         address creator;
         uint256 nftTotalSupply;
         uint256 reserved;
+        uint256 maxPerWallet;
         uint256 units;
         uint256 price;
         string name;

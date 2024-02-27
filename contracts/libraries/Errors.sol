@@ -13,6 +13,8 @@ library Errors {
     error ContractAlreadyExist();
 
     error ReservedTooMuch();
+    error InvaildParam();
+    error ReachMaxPerMint();
 
     error EmptyMerkleRoot();
     error AlreadyFinish();
