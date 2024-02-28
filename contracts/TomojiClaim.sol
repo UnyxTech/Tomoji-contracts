@@ -10,7 +10,7 @@ import {ITomoERC404Factory} from "./interfaces/ITomoERC404Factory.sol";
 import {Events} from "./libraries/Events.sol";
 import {Errors} from "./libraries/Errors.sol";
 
-contract TomoEmojiClaim is Ownable {
+contract TomojiClaim is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     struct TomoEmojiTokenClaimStruct {
