@@ -18,7 +18,7 @@ library DataTypes {
         uint256 price;
         string name;
         string symbol;
-        string baseUri;
+        string baseURI;
         string contractURI;
     }
 }

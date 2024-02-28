@@ -14,7 +14,7 @@ interface ITomoERC404Factory {
             uint256 price,
             string calldata name,
             string calldata symbol,
-            string calldata baseUri,
+            string calldata baseURI,
             string calldata contractURI
         );
 

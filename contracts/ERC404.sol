@@ -4,16 +4,10 @@ pragma solidity ^0.8.20;
 import {IERC721Receiver} from "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC404} from "./interfaces/IERC404.sol";
-import {DoubleEndedQueue} from "./libraries/DoubleEndedQueue.sol";
 import {ERC721Events} from "./libraries/ERC721Events.sol";
 import {ERC20Events} from "./libraries/ERC20Events.sol";
 
 abstract contract ERC404 is IERC404 {
-    using DoubleEndedQueue for DoubleEndedQueue.Uint256Deque;
-
-    /// @dev The queue of ERC-721 tokens stored in the contract.
-    DoubleEndedQueue.Uint256Deque private _storedERC721Ids;
-
     /// @dev Token name
     string public name;
 
@@ -69,9 +63,6 @@ abstract contract ERC404 is IERC404 {
     /// @dev Owned index bitmask for packed ownership data
     uint256 private constant _BITMASK_OWNED_INDEX = ((1 << 96) - 1) << 160;
 
-    /// @dev Constant for token id encoding
-    uint256 public constant ID_ENCODING_PREFIX = 1 << 255;
-
     constructor() {
         // EIP-2612 initialization
         _INITIAL_CHAIN_ID = block.chainid;
@@ -117,27 +108,6 @@ abstract contract ERC404 is IERC404 {
 
     function erc721TotalSupply() public view virtual returns (uint256) {
         return minted;
-    }
-
-    function getERC721QueueLength() public view virtual returns (uint256) {
-        return _storedERC721Ids.length();
-    }
-
-    function getERC721TokensInQueue(
-        uint256 start_,
-        uint256 count_
-    ) public view virtual returns (uint256[] memory) {
-        uint256[] memory tokensInQueue = new uint256[](count_);
-
-        for (uint256 i = start_; i < start_ + count_; ) {
-            tokensInQueue[i - start_] = _storedERC721Ids.at(i);
-
-            unchecked {
-                ++i;
-            }
-        }
-
-        return tokensInQueue;
     }
 
     /// @notice tokenURI must be implemented by child contract
@@ -445,11 +415,8 @@ abstract contract ERC404 is IERC404 {
         return target_ == address(0) || _erc721TransferExempt[target_];
     }
 
-    /// @notice For a token token id to be considered valid, it just needs
-    ///         to fall within the range of possible token ids, it does not
-    ///         necessarily have to be minted yet.
-    function _isValidTokenId(uint256 id_) internal pure returns (bool) {
-        return id_ > ID_ENCODING_PREFIX && id_ != type(uint256).max;
+    function _isValidTokenId(uint256 id_) internal view returns (bool) {
+        return id_ <= minted && id_ != type(uint256).max;
     }
 
     /// @notice Internal function to compute domain separator for EIP-2612 permits
@@ -663,10 +630,6 @@ abstract contract ERC404 is IERC404 {
             revert InvalidRecipient();
         }
 
-        if (totalSupply + value_ > ID_ENCODING_PREFIX) {
-            revert MintLimitReached();
-        }
-
         _transferERC20WithERC721(address(0), to_, value_);
     }
 
@@ -681,21 +644,15 @@ abstract contract ERC404 is IERC404 {
 
         uint256 id;
 
-        if (!_storedERC721Ids.empty()) {
-            // If there are any tokens in the bank, use those first.
-            // Pop off the end of the queue (FIFO).
-            id = _storedERC721Ids.popBack();
-        } else {
-            // Otherwise, mint a new token, should not be able to go over the total fractional supply.
-            ++minted;
+        // Otherwise, mint a new token, should not be able to go over the total fractional supply.
+        ++minted;
 
-            // Reserve max uint256 for approvals
-            if (minted == type(uint256).max) {
-                revert MintLimitReached();
-            }
-
-            id = ID_ENCODING_PREFIX + minted;
+        // Reserve max uint256 for approvals
+        if (minted == type(uint256).max) {
+            revert MintLimitReached();
         }
+
+        id = minted;
 
         address erc721Owner = _getOwnerOf(id);
 
@@ -724,9 +681,6 @@ abstract contract ERC404 is IERC404 {
         // Transfer to 0x0.
         // Does not handle ERC-721 exemptions.
         _transferERC721(from_, address(0), id);
-
-        // Record the token in the contract's bank queue.
-        _storedERC721Ids.pushFront(id);
     }
 
     /// @notice Initialization function to set pairs / etc, saving gas by avoiding mint / burn on unnecessary targets

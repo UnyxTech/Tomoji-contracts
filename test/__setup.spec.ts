@@ -23,14 +23,14 @@ export let deployerAddress: string;
 export let ownerAddress: string;
 export let userAddress: string;
 export let userTwoAddress: string;
-export let brc404Factory: TomoERC404Factory;
+export let tomoErc404Factory: TomoERC404Factory;
 export let eventsLib: Events;
 
 export let signWallet: Wallet;
 
-export const BRC404Factory_NAME = 'XRGB';
-export const ticker: string = 'XRGB';
-export const symbol: string = "XRGB";
+export const BRC404Factory_NAME = 'Tomo-ticker';
+export const ticker: string = 'Tomo';
+export const symbol: string = "Tomo";
 export const decimals = 18;
 
 export function makeSuiteCleanRoom(name: string, tests: () => void) {
@@ -57,11 +57,11 @@ before(async function () {
   userTwoAddress = await userTwo.getAddress();
   ownerAddress = await owner.getAddress();
 
-  brc404Factory = await new TomoERC404Factory__factory(deployer).deploy(ownerAddress);
+  tomoErc404Factory = await new TomoERC404Factory__factory(deployer).deploy(ownerAddress);
 
-  expect(brc404Factory).to.not.be.undefined;
+  expect(tomoErc404Factory).to.not.be.undefined;
 
-  await expect(brc404Factory.connect(user).setContractURI(userTwoAddress, "MoMo", "")).to.be.reverted
+  await expect(tomoErc404Factory.connect(user).setContractURI(userTwoAddress, "MoMo", "")).to.be.reverted
 
   eventsLib = await new Events__factory(deployer).deploy();
 });
