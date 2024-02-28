@@ -3,12 +3,12 @@
 pragma solidity ^0.8.17;
 
 import {ERC404} from "./ERC404.sol";
-import {ITomoERC404Factory} from "./interfaces/ITomoERC404Factory.sol";
+import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {Errors} from "./libraries/Errors.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract TomoERC404 is ERC404, Ownable {
+contract Tomoji is ERC404, Ownable {
     string public baseTokenURI;
     string public contractURI;
     uint256 public maxPerWallet;
@@ -40,7 +40,7 @@ contract TomoERC404 is ERC404, Ownable {
             symbol,
             baseTokenURI,
             contractURI
-        ) = ITomoERC404Factory(msg.sender)._parameters();
+        ) = ITomojiFactory(msg.sender)._parameters();
 
         _setERC721TransferExempt(creator, true);
         _setERC721TransferExempt(address(this), true);

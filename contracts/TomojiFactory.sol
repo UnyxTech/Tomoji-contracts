@@ -4,11 +4,11 @@ pragma solidity ^0.8.17;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
-import {TomoERC404} from "./TomoERC404.sol";
+import {Tomoji} from "./Tomoji.sol";
 import {Events} from "./libraries/Events.sol";
 import {Errors} from "./libraries/Errors.sol";
 
-contract TomoERC404Factory is ReentrancyGuard, Ownable {
+contract TomojiFactory is ReentrancyGuard, Ownable {
     DataTypes.CreateERC404Parameters public _parameters;
     mapping(address => mapping(string => address)) public _erc404Contract;
 
@@ -25,7 +25,7 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         }
         _parameters = vars;
         erc404 = address(
-            new TomoERC404{
+            new Tomoji{
                 salt: keccak256(
                     abi.encode(vars.name, vars.symbol, vars.creator)
                 )
@@ -53,7 +53,7 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         if (_erc404Contract[creator][name] == address(0x0)) {
             revert Errors.ZeroAddress();
         }
-        TomoERC404(_erc404Contract[creator][name]).setContractURI(
+        Tomoji(_erc404Contract[creator][name]).setContractURI(
             newContractUri
         );
         return true;
@@ -67,7 +67,7 @@ contract TomoERC404Factory is ReentrancyGuard, Ownable {
         if (_erc404Contract[creator][name] == address(0x0)) {
             revert Errors.ZeroAddress();
         }
-        TomoERC404(_erc404Contract[creator][name]).setTokenURI(_tokenURI);
+        Tomoji(_erc404Contract[creator][name]).setTokenURI(_tokenURI);
         return true;
     }
 

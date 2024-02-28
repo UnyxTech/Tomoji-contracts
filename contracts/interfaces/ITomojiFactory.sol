@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-interface ITomoERC404Factory {
+interface ITomojiFactory {
     function _parameters()
         external
         view

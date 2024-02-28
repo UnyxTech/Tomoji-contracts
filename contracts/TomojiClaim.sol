@@ -6,7 +6,7 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {TransferHelper} from "./libraries/TransferHelper.sol";
 import {IERC404} from "./interfaces/IERC404.sol";
-import {ITomoERC404Factory} from "./interfaces/ITomoERC404Factory.sol";
+import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {Events} from "./libraries/Events.sol";
 import {Errors} from "./libraries/Errors.sol";
 
@@ -22,19 +22,19 @@ contract TomojiClaim is Ownable {
         bytes32 merkleRoot;
         EnumerableSet.AddressSet claimedUser;
     }
-    uint256 public _nextEmojiClaimId;
-    address public _tomoERC404Factory;
+    uint256 public _nextTomojiClaimId;
+    address public _tomojiFactory;
     mapping(uint256 => TomojiTokenClaimStruct) internal _tomojiTokenClaim;
 
     constructor(address factory, address owner) Ownable(owner) {
-        _tomoERC404Factory = factory;
+        _tomojiFactory = factory;
     }
 
     function sendTomojiToken(
         string calldata name,
         uint256 emojiTokenAmount
     ) external {
-        address erc404Addr = ITomoERC404Factory(_tomoERC404Factory)
+        address erc404Addr = ITomojiFactory(_tomojiFactory)
             .erc404Contract(msg.sender, name);
         if (erc404Addr == address(0x0)) {
             revert Errors.NotExist();
@@ -44,7 +44,7 @@ contract TomojiClaim is Ownable {
             IERC404(erc404Addr).setSelfERC721TransferExempt(true);
         }
 
-        uint256 emojiClaimId = _nextEmojiClaimId++;
+        uint256 emojiClaimId = _nextTomojiClaimId++;
         TomojiTokenClaimStruct storage re = _tomojiTokenClaim[emojiClaimId];
         re.sponsor = msg.sender;
         re.erc404Addr = erc404Addr;
@@ -70,7 +70,7 @@ contract TomojiClaim is Ownable {
         if (factory == address(0x0)) {
             revert Errors.ZeroAddress();
         }
-        _tomoERC404Factory = factory;
+        _tomojiFactory = factory;
     }
 
     function setMerkleRootForTomojiToken(
@@ -85,7 +85,7 @@ contract TomojiClaim is Ownable {
         }
         for (uint256 i = 0; i < emojiClaimIds.length; i++) {
             uint256 id = emojiClaimIds[i];
-            if (id >= _nextEmojiClaimId) {
+            if (id >= _nextTomojiClaimId) {
                 revert Errors.InvaildId();
             }
             _tomojiTokenClaim[id].merkleRoot = merkleRoots[i];
