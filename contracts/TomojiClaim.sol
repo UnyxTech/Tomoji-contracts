@@ -13,7 +13,7 @@ import {Errors} from "./libraries/Errors.sol";
 contract TomojiClaim is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    struct TomoEmojiTokenClaimStruct {
+    struct TomojiTokenClaimStruct {
         address sponsor;
         address erc404Addr;
         uint256 total;
@@ -24,13 +24,13 @@ contract TomojiClaim is Ownable {
     }
     uint256 public _nextEmojiClaimId;
     address public _tomoERC404Factory;
-    mapping(uint256 => TomoEmojiTokenClaimStruct) internal _tomoEmojiTokenClaim;
+    mapping(uint256 => TomojiTokenClaimStruct) internal _tomojiTokenClaim;
 
     constructor(address factory, address owner) Ownable(owner) {
         _tomoERC404Factory = factory;
     }
 
-    function sendTomoEmojiToken(
+    function sendTomojiToken(
         string calldata name,
         uint256 emojiTokenAmount
     ) external {
@@ -45,9 +45,7 @@ contract TomojiClaim is Ownable {
         }
 
         uint256 emojiClaimId = _nextEmojiClaimId++;
-        TomoEmojiTokenClaimStruct storage re = _tomoEmojiTokenClaim[
-            emojiClaimId
-        ];
+        TomojiTokenClaimStruct storage re = _tomojiTokenClaim[emojiClaimId];
         re.sponsor = msg.sender;
         re.erc404Addr = erc404Addr;
         re.total = emojiTokenAmount;
@@ -60,7 +58,7 @@ contract TomojiClaim is Ownable {
             emojiTokenAmount
         );
 
-        emit Events.SendTomoEmojiToken(
+        emit Events.SendTomojiToken(
             msg.sender,
             name,
             emojiClaimId,
@@ -75,7 +73,7 @@ contract TomojiClaim is Ownable {
         _tomoERC404Factory = factory;
     }
 
-    function setMerkleRootForTomoEmojiToken(
+    function setMerkleRootForTomojiToken(
         uint256[] calldata emojiClaimIds,
         bytes32[] calldata merkleRoots
     ) public onlyOwner {
@@ -90,27 +88,25 @@ contract TomojiClaim is Ownable {
             if (id >= _nextEmojiClaimId) {
                 revert Errors.InvaildId();
             }
-            _tomoEmojiTokenClaim[id].merkleRoot = merkleRoots[i];
+            _tomojiTokenClaim[id].merkleRoot = merkleRoots[i];
         }
     }
 
-    function claimTomoEmojiToken(
+    function claimTomojiToken(
         uint256 emojiClaimId,
         uint256 claimAmount,
         bytes32[] calldata merkleProof
     ) external {
-        if (_tomoEmojiTokenClaim[emojiClaimId].merkleRoot == bytes32(0)) {
+        if (_tomojiTokenClaim[emojiClaimId].merkleRoot == bytes32(0)) {
             revert Errors.EmptyMerkleRoot();
         }
-        if (_tomoEmojiTokenClaim[emojiClaimId].left == 0) {
+        if (_tomojiTokenClaim[emojiClaimId].left == 0) {
             revert Errors.AlreadyFinish();
         }
-        if (_tomoEmojiTokenClaim[emojiClaimId].left < claimAmount) {
+        if (_tomojiTokenClaim[emojiClaimId].left < claimAmount) {
             revert Errors.NotEnough();
         }
-        if (
-            _tomoEmojiTokenClaim[emojiClaimId].claimedUser.contains(msg.sender)
-        ) {
+        if (_tomojiTokenClaim[emojiClaimId].claimedUser.contains(msg.sender)) {
             revert Errors.AlreadyClaimed();
         }
         bytes32 leafNode = keccak256(
@@ -119,36 +115,34 @@ contract TomojiClaim is Ownable {
         if (
             !MerkleProof.verify(
                 merkleProof,
-                _tomoEmojiTokenClaim[emojiClaimId].merkleRoot,
+                _tomojiTokenClaim[emojiClaimId].merkleRoot,
                 leafNode
             )
         ) {
             revert Errors.MerkleProofVerifyFailed();
         }
-        _tomoEmojiTokenClaim[emojiClaimId].claimedUser.add(msg.sender);
-        _tomoEmojiTokenClaim[emojiClaimId].claimed += claimAmount;
-        _tomoEmojiTokenClaim[emojiClaimId].left -= claimAmount;
+        _tomojiTokenClaim[emojiClaimId].claimedUser.add(msg.sender);
+        _tomojiTokenClaim[emojiClaimId].claimed += claimAmount;
+        _tomojiTokenClaim[emojiClaimId].left -= claimAmount;
 
         TransferHelper.safeTransfer(
-            _tomoEmojiTokenClaim[emojiClaimId].erc404Addr,
+            _tomojiTokenClaim[emojiClaimId].erc404Addr,
             msg.sender,
             claimAmount
         );
 
-        if (_tomoEmojiTokenClaim[emojiClaimId].left == 0) {
+        if (_tomojiTokenClaim[emojiClaimId].left == 0) {
             for (
                 uint i = 0;
-                i < _tomoEmojiTokenClaim[emojiClaimId].claimedUser.length();
+                i < _tomojiTokenClaim[emojiClaimId].claimedUser.length();
                 i++
             ) {
-                address claimUser = _tomoEmojiTokenClaim[emojiClaimId]
+                address claimUser = _tomojiTokenClaim[emojiClaimId]
                     .claimedUser
                     .at(i);
-                _tomoEmojiTokenClaim[emojiClaimId].claimedUser.remove(
-                    claimUser
-                );
+                _tomojiTokenClaim[emojiClaimId].claimedUser.remove(claimUser);
             }
-            delete _tomoEmojiTokenClaim[emojiClaimId];
+            delete _tomojiTokenClaim[emojiClaimId];
         }
     }
 }

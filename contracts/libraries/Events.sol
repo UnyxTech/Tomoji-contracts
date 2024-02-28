@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 library Events {
-    event SendTomoEmojiToken(
+    event SendTomojiToken(
         address indexed sponsor,
         string name,
         uint256 emojiClaimId,
