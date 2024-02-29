@@ -41,7 +41,9 @@ contract TomojiFactory is ReentrancyGuard, Ownable {
             vars.units,
             vars.price,
             vars.name,
-            vars.symbol
+            vars.symbol,
+            vars.baseURI,
+            vars.contractURI
         );
     }
 
@@ -53,9 +55,7 @@ contract TomojiFactory is ReentrancyGuard, Ownable {
         if (_erc404Contract[creator][name] == address(0x0)) {
             revert Errors.ZeroAddress();
         }
-        Tomoji(_erc404Contract[creator][name]).setContractURI(
-            newContractUri
-        );
+        Tomoji(_erc404Contract[creator][name]).setContractURI(newContractUri);
         return true;
     }
 

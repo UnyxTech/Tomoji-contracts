@@ -17,24 +17,8 @@ library Events {
         uint256 nftUnit,
         uint256 price,
         string name,
-        string symbol
+        string symbol,
+        string baseURI,
+        string contractURI
     );
-
-    event BRC404Minted(
-        address indexed to,
-        uint256 indexed amount,
-        string ticker,
-        string txId
-    );
-
-    event BRC404Burned(
-        address indexed burner,
-        uint256 amount,
-        uint256 fee,
-        uint256 chainid,
-        string ticker,
-        string receiver
-    );
-
-    event FeeChanged(uint256 oldFee, uint256 newFee);
 }

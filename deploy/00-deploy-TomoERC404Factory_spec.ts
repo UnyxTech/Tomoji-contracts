@@ -9,13 +9,13 @@ const deployFn: DeployFunction = async (hre) => {
   const { deployer, owner } = await hre.getNamedAccounts()
   await deployAndVerifyAndThen({
       hre,
-      name: "TomoERC404Factory",
-      contract: 'TomoERC404Factory',
+      name: "TomojiFactory",
+      contract: 'TomojiFactory',
       args: [deployer],
   })
 }
 
 // This is kept during an upgrade. So no upgrade tag.
-deployFn.tags = ['TomoERC404Factory']
+deployFn.tags = ['TomojiFactory']
 
 export default deployFn
