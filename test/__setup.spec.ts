@@ -3,9 +3,9 @@ import { expect } from 'chai';
 import { Signer, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import {
-  TomoERC404,
-  TomoERC404Factory__factory,
-  TomoERC404Factory,
+  Tomoji,
+  TomojiFactory__factory,
+  TomojiFactory,
   Events,
   Events__factory
 } from '../typechain-types';
@@ -23,7 +23,7 @@ export let deployerAddress: string;
 export let ownerAddress: string;
 export let userAddress: string;
 export let userTwoAddress: string;
-export let tomoErc404Factory: TomoERC404Factory;
+export let tomojiFactory: TomojiFactory;
 export let eventsLib: Events;
 
 export let signWallet: Wallet;
@@ -57,11 +57,11 @@ before(async function () {
   userTwoAddress = await userTwo.getAddress();
   ownerAddress = await owner.getAddress();
 
-  tomoErc404Factory = await new TomoERC404Factory__factory(deployer).deploy(ownerAddress);
+  tomojiFactory = await new TomojiFactory__factory(deployer).deploy(ownerAddress);
 
-  expect(tomoErc404Factory).to.not.be.undefined;
+  expect(tomojiFactory).to.not.be.undefined;
 
-  await expect(tomoErc404Factory.connect(user).setContractURI(userTwoAddress, "MoMo", "")).to.be.reverted
+  await expect(tomojiFactory.connect(user).setContractURI(userTwoAddress, "MoMo", "")).to.be.reverted
 
   eventsLib = await new Events__factory(deployer).deploy();
 });

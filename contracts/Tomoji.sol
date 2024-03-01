@@ -29,28 +29,27 @@ contract Tomoji is ERC404, Ownable {
         uint256 nftSupply;
         uint256 reserved;
         decimals = 18;
+        uint256 nftUnit;
         (
             creator,
             nftSupply,
             reserved,
             maxPerWallet,
-            units,
+            nftUnit,
             mintPrice,
             name,
             symbol,
             baseTokenURI,
             contractURI
         ) = ITomojiFactory(msg.sender)._parameters();
+        units = nftUnit * 10 ** decimals;
 
         _setERC721TransferExempt(creator, true);
         _setERC721TransferExempt(address(this), true);
         if (reserved > 0) {
             _mintERC20(creator, reserved * units);
         }
-        _mintERC20(
-            address(this),
-            (nftSupply - reserved) * units * 10 ** decimals
-        );
+        _mintERC20(address(this), (nftSupply - reserved) * units);
 
         factory = msg.sender;
         _transferOwnership(creator);
