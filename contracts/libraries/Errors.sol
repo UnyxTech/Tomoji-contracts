@@ -21,4 +21,5 @@ library Errors {
     error NotEnough();
     error AlreadyClaimed();
     error MerkleProofVerifyFailed();
+    error X404SwapV3FactoryMismatch();
 }

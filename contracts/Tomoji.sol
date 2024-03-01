@@ -3,8 +3,11 @@
 pragma solidity ^0.8.17;
 
 import {ERC404} from "./ERC404.sol";
+import {DataTypes} from "./libraries/DataTypes.sol";
+import {IPeripheryImmutableState} from "./interfaces/IPeripheryImmutableState.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {Errors} from "./libraries/Errors.sol";
+import {LibCaculatePair} from "./libraries/LibCaculatePair.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -44,6 +47,12 @@ contract Tomoji is ERC404, Ownable {
         ) = ITomojiFactory(msg.sender)._parameters();
         units = nftUnit * 10 ** decimals;
 
+        DataTypes.SwapRouter[] memory swapRouterStruct = ITomojiFactory(
+            msg.sender
+        ).getSwapRouter();
+
+        //add swap pair router address into whitelist
+        _setRouterTransferExempt(swapRouterStruct);
         _setERC721TransferExempt(creator, true);
         _setERC721TransferExempt(address(this), true);
         if (reserved > 0) {
@@ -135,5 +144,83 @@ contract Tomoji is ERC404, Ownable {
 
     function tokenURI(uint256 id) public view override returns (string memory) {
         return string.concat(baseTokenURI, Strings.toString(id));
+    }
+
+    /**************Internal Function **********/
+    function _setRouterTransferExempt(
+        DataTypes.SwapRouter[] memory swapRouterStruct
+    ) internal {
+        address thisAddress = address(this);
+        for (uint i = 0; i < swapRouterStruct.length; ) {
+            address routerAddr = swapRouterStruct[i].routerAddr;
+            if (routerAddr == address(0)) {
+                revert Errors.ZeroAddress();
+            }
+            _setERC721TransferExempt(routerAddr, true);
+
+            address weth_ = IPeripheryImmutableState(routerAddr).WETH9();
+            address swapFactory = IPeripheryImmutableState(routerAddr)
+                .factory();
+            (address token0, address token1) = thisAddress < weth_
+                ? (thisAddress, weth_)
+                : (weth_, thisAddress);
+
+            if (swapRouterStruct[i].bV2orV3) {
+                address pair = LibCaculatePair._getUniswapV2Pair(
+                    swapFactory,
+                    token0,
+                    token1
+                );
+                _setERC721TransferExempt(pair, true);
+            } else {
+                address v3NonfungiblePositionManager = swapRouterStruct[i]
+                    .uniswapV3NonfungiblePositionManager;
+                if (v3NonfungiblePositionManager == address(0)) {
+                    revert Errors.ZeroAddress();
+                }
+                if (
+                    IPeripheryImmutableState(v3NonfungiblePositionManager)
+                        .factory() !=
+                    swapFactory ||
+                    IPeripheryImmutableState(v3NonfungiblePositionManager)
+                        .WETH9() !=
+                    weth_
+                ) {
+                    revert Errors.X404SwapV3FactoryMismatch();
+                }
+                _setERC721TransferExempt(v3NonfungiblePositionManager, true);
+                _setV3SwapTransferExempt(swapFactory, token0, token1);
+            }
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _setV3SwapTransferExempt(
+        address swapFactory,
+        address token0,
+        address token1
+    ) internal {
+        uint24[4] memory feeTiers = [
+            uint24(100),
+            uint24(500),
+            uint24(3_000),
+            uint24(10_000)
+        ];
+
+        for (uint256 i = 0; i < feeTiers.length; ) {
+            address v3PairAddr = LibCaculatePair._getUniswapV3Pair(
+                swapFactory,
+                token0,
+                token1,
+                feeTiers[i]
+            );
+            // Set the v3 pair as exempt.
+            _setERC721TransferExempt(v3PairAddr, true);
+            unchecked {
+                ++i;
+            }
+        }
     }
 }

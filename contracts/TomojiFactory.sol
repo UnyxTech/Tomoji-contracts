@@ -1,18 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {Tomoji} from "./Tomoji.sol";
 import {Events} from "./libraries/Events.sol";
 import {Errors} from "./libraries/Errors.sol";
 
-contract TomojiFactory is ReentrancyGuard, Ownable {
+contract TomojiFactory is OwnableUpgradeable {
     DataTypes.CreateERC404Parameters public _parameters;
+    DataTypes.SwapRouter[] public _swapRouterAddr;
     mapping(address => mapping(string => address)) public _erc404Contract;
 
-    constructor(address owner) Ownable(owner) {}
+    function initialize(
+        address owner,
+        DataTypes.SwapRouter[] memory swapRouterAddr
+    ) public initializer {
+        __Ownable_init(owner);
+        for (uint256 i = 0; i < swapRouterAddr.length; ) {
+            _swapRouterAddr.push(swapRouterAddr[i]);
+            unchecked {
+                i++;
+            }
+        }
+    }
 
     function createERC404(
         DataTypes.CreateERC404Parameters calldata vars
@@ -92,5 +103,25 @@ contract TomojiFactory is ReentrancyGuard, Ownable {
         string calldata name
     ) external view returns (address) {
         return _erc404Contract[creator][name];
+    }
+
+    function setSwapRouter(
+        DataTypes.SwapRouter[] memory swapRouterAddr
+    ) public onlyOwner {
+        delete _swapRouterAddr;
+        for (uint256 i = 0; i < swapRouterAddr.length; ) {
+            _swapRouterAddr.push(swapRouterAddr[i]);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function getSwapRouter()
+        public
+        view
+        returns (DataTypes.SwapRouter[] memory)
+    {
+        return _swapRouterAddr;
     }
 }

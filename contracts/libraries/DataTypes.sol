@@ -21,4 +21,10 @@ library DataTypes {
         string baseURI;
         string contractURI;
     }
+
+    struct SwapRouter {
+        bool bV2orV3;
+        address routerAddr;
+        address uniswapV3NonfungiblePositionManager;
+    }
 }

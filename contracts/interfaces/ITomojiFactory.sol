@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
+import {DataTypes} from "../libraries/DataTypes.sol";
 
 interface ITomojiFactory {
     function _parameters()
@@ -22,4 +23,9 @@ interface ITomojiFactory {
         address creator,
         string calldata name
     ) external view returns (address);
+
+    function getSwapRouter()
+        external
+        view
+        returns (DataTypes.SwapRouter[] memory);
 }
