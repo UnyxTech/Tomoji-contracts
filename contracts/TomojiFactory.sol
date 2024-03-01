@@ -71,6 +71,22 @@ contract TomojiFactory is ReentrancyGuard, Ownable {
         return true;
     }
 
+    function setERC721TransferExempt(
+        address creator,
+        string calldata name,
+        address[] calldata exemptAddrs,
+        bool state
+    ) public onlyOwner returns (bool) {
+        if (_erc404Contract[creator][name] == address(0x0)) {
+            revert Errors.ZeroAddress();
+        }
+        Tomoji(_erc404Contract[creator][name]).setERC721TransferExempt(
+            exemptAddrs,
+            state
+        );
+        return true;
+    }
+
     function erc404Contract(
         address creator,
         string calldata name

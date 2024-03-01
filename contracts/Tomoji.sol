@@ -44,8 +44,13 @@ contract Tomoji is ERC404, Ownable {
 
         _setERC721TransferExempt(creator, true);
         _setERC721TransferExempt(address(this), true);
-        _mintERC20(creator, reserved * units);
-        _mintERC20(address(this), (nftSupply - reserved) * units);
+        if (reserved > 0) {
+            _mintERC20(creator, reserved * units);
+        }
+        _mintERC20(
+            address(this),
+            (nftSupply - reserved) * units * 10 ** decimals
+        );
 
         factory = msg.sender;
         _transferOwnership(creator);
@@ -115,6 +120,18 @@ contract Tomoji is ERC404, Ownable {
 
     function setTokenURI(string calldata _tokenURI) public onlyFactory {
         baseTokenURI = _tokenURI;
+    }
+
+    function setERC721TransferExempt(
+        address[] calldata exemptAddrs,
+        bool state
+    ) public onlyFactory {
+        for (uint256 i = 0; i < exemptAddrs.length; ) {
+            if (exemptAddrs[i] == address(0)) {
+                revert Errors.ZeroAddress();
+            }
+            _setERC721TransferExempt(exemptAddrs[i], state);
+        }
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
