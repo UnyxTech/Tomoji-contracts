@@ -57,7 +57,7 @@ before(async function () {
   userTwoAddress = await userTwo.getAddress();
   ownerAddress = await owner.getAddress();
 
-  tomojiFactory = await new TomojiFactory__factory(deployer).deploy(ownerAddress);
+  tomojiFactory = await new TomojiFactory__factory(deployer).deploy();
 
   expect(tomojiFactory).to.not.be.undefined;
 

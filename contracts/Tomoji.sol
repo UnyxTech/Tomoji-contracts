@@ -161,15 +161,12 @@ contract Tomoji is ERC404, Ownable {
             address weth_ = IPeripheryImmutableState(routerAddr).WETH9();
             address swapFactory = IPeripheryImmutableState(routerAddr)
                 .factory();
-            (address token0, address token1) = thisAddress < weth_
-                ? (thisAddress, weth_)
-                : (weth_, thisAddress);
 
             if (swapRouterStruct[i].bV2orV3) {
                 address pair = LibCaculatePair._getUniswapV2Pair(
                     swapFactory,
-                    token0,
-                    token1
+                    thisAddress,
+                    weth_
                 );
                 _setERC721TransferExempt(pair, true);
             } else {
@@ -189,7 +186,7 @@ contract Tomoji is ERC404, Ownable {
                     revert Errors.X404SwapV3FactoryMismatch();
                 }
                 _setERC721TransferExempt(v3NonfungiblePositionManager, true);
-                _setV3SwapTransferExempt(swapFactory, token0, token1);
+                _setV3SwapTransferExempt(swapFactory, thisAddress, weth_);
             }
             unchecked {
                 ++i;

@@ -4,9 +4,12 @@ pragma solidity ^0.8.17;
 library LibCaculatePair {
     function _getUniswapV2Pair(
         address uniswapV2Factory_,
-        address token0,
-        address token1
-    ) public pure returns (address) {
+        address tokenA,
+        address tokenB
+    ) internal pure returns (address) {
+        (address token0, address token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         return
             address(
                 uint160(
@@ -26,10 +29,13 @@ library LibCaculatePair {
 
     function _getUniswapV3Pair(
         address uniswapV3Factory_,
-        address token0,
-        address token1,
+        address tokenA,
+        address tokenB,
         uint24 fee_
-    ) public pure returns (address) {
+    ) internal pure returns (address) {
+        (address token0, address token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         return
             address(
                 uint160(
