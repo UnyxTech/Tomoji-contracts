@@ -12,8 +12,6 @@ contract TomojiFactory is OwnableUpgradeable {
     DataTypes.SwapRouter[] public _swapRouterAddr;
     mapping(address => mapping(string => address)) public _erc404Contract;
 
-    constructor() {}
-
     function initialize(
         address owner,
         DataTypes.SwapRouter[] memory swapRouterAddr
