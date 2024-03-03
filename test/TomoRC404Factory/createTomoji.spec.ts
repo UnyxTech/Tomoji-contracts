@@ -99,12 +99,12 @@ makeSuiteCleanRoom('create ERC404', function () {
                 );
                 expect(receipt.logs.length).to.eq(5, `Expected 1 events, got ${receipt.logs.length}`);
                 const event = findEvent(receipt, 'ERC404Created');
-                tomoErc404Address = event.args[0];
+                tomoErc404Address = event!.args[0];
     
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                expect(await brc404Contract.units()).to.equal(ethers.utils.parseEther("200"));
-                expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.utils.parseEther(((nftTotalSupply-reserved1)*units).toString()));
-                expect(await brc404Contract.balanceOf(ownerAddress)).to.equal(ethers.utils.parseEther(((reserved1)*units).toString()));
+                expect(await brc404Contract.units()).to.equal(ethers.parseEther("200"));
+                expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply-reserved1)*units).toString()));
+                expect(await brc404Contract.balanceOf(ownerAddress)).to.equal(ethers.parseEther(((reserved1)*units).toString()));
             })
         })
     })

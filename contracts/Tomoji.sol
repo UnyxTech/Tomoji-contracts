@@ -88,7 +88,8 @@ contract Tomoji is ERC404, Ownable {
     }
 
     function mint(uint256 mintAmount_) public payable virtual returns (bool) {
-        if (mintAmount_ == 0 || msg.value < mintPrice * mintAmount_) {
+        uint256 price = mintPrice * mintAmount_;
+        if (mintAmount_ == 0 || msg.value < price) {
             revert Errors.InvaildParam();
         }
         if (mintAccount[msg.sender] + mintAmount_ >= maxPerWallet) {
@@ -98,6 +99,18 @@ contract Tomoji is ERC404, Ownable {
         if (buyAmount > balanceOf[address(this)]) {
             revert Errors.NotEnough();
         }
+
+        if (msg.value > price) {
+            (bool success, ) = msg.sender.call{value: msg.value - price}("");
+            if (!success) {
+                revert Errors.SendETHFailed();
+            }
+        }
+        (bool success1, ) = creator.call{value: price}("");
+        if (!success1) {
+            revert Errors.SendETHFailed();
+        }
+
         _transferERC20WithERC721(address(this), msg.sender, buyAmount);
         return true;
     }

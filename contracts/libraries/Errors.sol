@@ -19,6 +19,7 @@ library Errors {
     error EmptyMerkleRoot();
     error AlreadyFinish();
     error NotEnough();
+    error SendETHFailed();
     error AlreadyClaimed();
     error MerkleProofVerifyFailed();
     error X404SwapV3FactoryMismatch();
