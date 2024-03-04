@@ -5,6 +5,7 @@ pragma solidity ^0.8.17;
 import {ERC404} from "./ERC404.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {IPeripheryImmutableState} from "./interfaces/IPeripheryImmutableState.sol";
+import {IUniswapV2Router} from "./interfaces/IUniswapV2Router.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {Errors} from "./libraries/Errors.sol";
 import {LibCaculatePair} from "./libraries/LibCaculatePair.sol";
@@ -171,11 +172,9 @@ contract Tomoji is ERC404, Ownable {
             }
             _setERC721TransferExempt(routerAddr, true);
 
-            address weth_ = IPeripheryImmutableState(routerAddr).WETH9();
-            address swapFactory = IPeripheryImmutableState(routerAddr)
-                .factory();
-
             if (swapRouterStruct[i].bV2orV3) {
+                address weth_ = IUniswapV2Router(routerAddr).WETH();
+                address swapFactory = IUniswapV2Router(routerAddr).factory();
                 address pair = LibCaculatePair._getUniswapV2Pair(
                     swapFactory,
                     thisAddress,
@@ -183,6 +182,9 @@ contract Tomoji is ERC404, Ownable {
                 );
                 _setERC721TransferExempt(pair, true);
             } else {
+                address weth_ = IPeripheryImmutableState(routerAddr).WETH9();
+                address swapFactory = IPeripheryImmutableState(routerAddr)
+                    .factory();
                 address v3NonfungiblePositionManager = swapRouterStruct[i]
                     .uniswapV3NonfungiblePositionManager;
                 if (v3NonfungiblePositionManager == address(0)) {
