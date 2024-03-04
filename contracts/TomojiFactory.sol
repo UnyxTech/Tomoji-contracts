@@ -98,13 +98,6 @@ contract TomojiFactory is OwnableUpgradeable {
         return true;
     }
 
-    function erc404Contract(
-        address creator,
-        string calldata name
-    ) external view returns (address) {
-        return _erc404Contract[creator][name];
-    }
-
     function setSwapRouter(
         DataTypes.SwapRouter[] memory swapRouterAddr
     ) public onlyOwner {
