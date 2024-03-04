@@ -49,6 +49,7 @@ contract TomojiFactory is OwnableUpgradeable {
             vars.creator,
             vars.nftTotalSupply,
             vars.reserved,
+            vars.maxPerWallet,
             vars.units,
             vars.price,
             vars.name,
