@@ -13,12 +13,12 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Tomoji is ERC404, Ownable {
-    string public baseTokenURI;
+    string private baseTokenURI;
     string public contractURI;
     uint256 public maxPerWallet;
     uint256 public mintPrice;
 
-    mapping(address => uint) mintAccount;
+    mapping(address => uint) private mintAccount;
     address public immutable creator;
     address public immutable factory;
 
@@ -93,13 +93,16 @@ contract Tomoji is ERC404, Ownable {
         if (mintAmount_ == 0 || msg.value < price) {
             revert Errors.InvaildParam();
         }
-        if (mintAccount[msg.sender] + mintAmount_ >= maxPerWallet) {
+        if (mintAccount[msg.sender] + mintAmount_ > maxPerWallet) {
             revert Errors.ReachMaxPerMint();
         }
         uint256 buyAmount = mintAmount_ * units;
         if (buyAmount > balanceOf[address(this)]) {
             revert Errors.NotEnough();
         }
+
+        mintAccount[msg.sender] += mintAmount_;
+        _transferERC20WithERC721(address(this), msg.sender, buyAmount);
 
         if (msg.value > price) {
             (bool success, ) = msg.sender.call{value: msg.value - price}("");
@@ -111,8 +114,6 @@ contract Tomoji is ERC404, Ownable {
         if (!success1) {
             revert Errors.SendETHFailed();
         }
-
-        _transferERC20WithERC721(address(this), msg.sender, buyAmount);
         return true;
     }
 
