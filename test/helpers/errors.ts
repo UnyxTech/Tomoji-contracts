@@ -3,6 +3,7 @@ export const ERRORS = {
   ContractAlreadyExist: "ContractAlreadyExist",
   InvaildParam: "InvaildParam",
   ReachMaxPerMint: "ReachMaxPerMint",
-  NotEnough: "NotEnough"
+  NotEnough: "NotEnough",
+  NotFound: "NotFound"
 };
   
