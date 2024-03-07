@@ -28,6 +28,9 @@ contract TomojiFactory is OwnableUpgradeable {
     function createERC404(
         DataTypes.CreateERC404Parameters calldata vars
     ) external returns (address erc404) {
+        if (msg.sender != vars.creator) {
+            revert Errors.InvaildParam();
+        }
         if (vars.reserved >= vars.nftTotalSupply) {
             revert Errors.ReservedTooMuch();
         }

@@ -26,7 +26,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                 })).to.be.revertedWithCustomError(tomojiFactory, ERRORS.ReservedTooMuch)
             });
 
-            it('User should fail to create if reserved large than supply.',   async function () {
+            it('User should fail to create twice using same param.',   async function () {
                 await expect(tomojiFactory.connect(owner).createERC404({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
@@ -69,7 +69,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                     contractURI: "https://tomo-contract"
                 })).to.not.be.reverted;
             })
-            it('Create tomo emoji collection if pass correct param.',   async function () {
+            it('Get correct variable tomo emoji collection if pass correct param.',   async function () {
                 let tomoErc404Address: string
                 let nftTotalSupply = 10000
                 let reserved0 = 0
@@ -100,6 +100,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                 expect(receipt.logs.length).to.eq(5, `Expected 1 events, got ${receipt.logs.length}`);
                 const event = findEvent(receipt, 'ERC404Created');
                 tomoErc404Address = event!.args[0];
+                console.log(tomoErc404Address)
     
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
                 expect(await brc404Contract.units()).to.equal(ethers.parseEther("200"));

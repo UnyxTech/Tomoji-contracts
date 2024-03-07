@@ -68,10 +68,13 @@ contract Tomoji is ERC404, Ownable {
     function multiTransferFrom(
         address from_,
         address[] calldata to_,
-        uint256 valueOrId_
+        uint256 value
     ) public virtual returns (bool) {
+        if (_isValidTokenId(value)) {
+            revert Errors.CannotSendERC20LessThanMinted();
+        }
         for (uint256 i = 0; i < to_.length; i++) {
-            transferFrom(from_, to_[i], valueOrId_);
+            transferFrom(from_, to_[i], value);
         }
 
         return true;
@@ -79,10 +82,10 @@ contract Tomoji is ERC404, Ownable {
 
     function multiTransfer(
         address[] calldata to_,
-        uint256 valueOrId_
+        uint256 value
     ) public virtual returns (bool) {
         for (uint256 i = 0; i < to_.length; i++) {
-            transfer(to_[i], valueOrId_);
+            transfer(to_[i], value);
         }
 
         return true;

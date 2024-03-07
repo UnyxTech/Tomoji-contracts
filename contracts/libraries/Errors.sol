@@ -23,4 +23,5 @@ library Errors {
     error AlreadyClaimed();
     error MerkleProofVerifyFailed();
     error X404SwapV3FactoryMismatch();
+    error CannotSendERC20LessThanMinted();
 }

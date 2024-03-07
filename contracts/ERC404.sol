@@ -358,7 +358,7 @@ abstract contract ERC404 is IERC404 {
     }
 
     function _isValidTokenId(uint256 id_) internal view returns (bool) {
-        return id_ <= minted && id_ != type(uint256).max;
+        return id_ <= minted;
     }
 
     /// @notice This is the lowest level ERC-20 transfer function, which

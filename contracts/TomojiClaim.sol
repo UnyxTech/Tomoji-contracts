@@ -32,10 +32,16 @@ contract TomojiClaim is Ownable {
 
     function sendTomojiToken(
         string calldata name,
-        uint256 emojiTokenAmount
+        uint256 emojiTokenAmount,
+        bytes32 merkleRoot
     ) external {
-        address erc404Addr = ITomojiFactory(_tomojiFactory)
-            .erc404Contract(msg.sender, name);
+        if (emojiTokenAmount == 0 || merkleRoot == bytes32(0)) {
+            revert Errors.InvaildParam();
+        }
+        address erc404Addr = ITomojiFactory(_tomojiFactory).erc404Contract(
+            msg.sender,
+            name
+        );
         if (erc404Addr == address(0x0)) {
             revert Errors.NotExist();
         }
@@ -50,8 +56,9 @@ contract TomojiClaim is Ownable {
         re.erc404Addr = erc404Addr;
         re.total = emojiTokenAmount;
         re.left = emojiTokenAmount;
+        re.merkleRoot = merkleRoot;
 
-        TransferHelper.safeTransferFrom(
+        TransferHelper.erc20TransferFrom(
             erc404Addr,
             msg.sender,
             address(this),
@@ -125,24 +132,10 @@ contract TomojiClaim is Ownable {
         _tomojiTokenClaim[emojiClaimId].claimed += claimAmount;
         _tomojiTokenClaim[emojiClaimId].left -= claimAmount;
 
-        TransferHelper.safeTransfer(
+        TransferHelper.erc20Transfer(
             _tomojiTokenClaim[emojiClaimId].erc404Addr,
             msg.sender,
             claimAmount
         );
-
-        if (_tomojiTokenClaim[emojiClaimId].left == 0) {
-            for (
-                uint i = 0;
-                i < _tomojiTokenClaim[emojiClaimId].claimedUser.length();
-                i++
-            ) {
-                address claimUser = _tomojiTokenClaim[emojiClaimId]
-                    .claimedUser
-                    .at(i);
-                _tomojiTokenClaim[emojiClaimId].claimedUser.remove(claimUser);
-            }
-            delete _tomojiTokenClaim[emojiClaimId];
-        }
     }
 }
