@@ -14,7 +14,6 @@ library DataTypes {
         uint256 nftTotalSupply;
         uint256 reserved;
         uint256 maxPerWallet;
-        uint256 units;
         uint256 price;
         string name;
         string symbol;
@@ -22,8 +21,14 @@ library DataTypes {
         string contractURI;
     }
 
+    enum SwapRouterType {
+        UniswapV2,
+        UniswapV3,
+        SatoriSwap
+    }
+
     struct SwapRouter {
-        bool bV2orV3;
+        SwapRouterType swapType;
         address routerAddr;
         address uniswapV3NonfungiblePositionManager;
     }

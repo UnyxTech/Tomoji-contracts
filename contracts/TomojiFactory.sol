@@ -53,25 +53,12 @@ contract TomojiFactory is OwnableUpgradeable {
             vars.nftTotalSupply,
             vars.reserved,
             vars.maxPerWallet,
-            vars.units,
             vars.price,
             vars.name,
             vars.symbol,
             vars.baseURI,
             vars.contractURI
         );
-    }
-
-    function setContractURI(
-        address creator,
-        string calldata name,
-        string calldata newContractUri
-    ) public onlyOwner returns (bool) {
-        if (_erc404Contract[creator][name] == address(0x0)) {
-            revert Errors.ZeroAddress();
-        }
-        Tomoji(_erc404Contract[creator][name]).setContractURI(newContractUri);
-        return true;
     }
 
     function setTokenURI(

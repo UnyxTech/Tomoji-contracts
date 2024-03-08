@@ -15,7 +15,6 @@ library Events {
         uint256 totalSupply,
         uint256 reserved,
         uint256 maxPerWallet,
-        uint256 nftUnit,
         uint256 price,
         string name,
         string symbol,

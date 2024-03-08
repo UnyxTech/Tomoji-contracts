@@ -11,7 +11,6 @@ interface ITomojiFactory {
             uint256 nftTotalSupply,
             uint256 reserved,
             uint256 maxPerWallet,
-            uint256 nftUnit,
             uint256 price,
             string calldata name,
             string calldata symbol,
@@ -28,4 +27,6 @@ interface ITomojiFactory {
         external
         view
         returns (DataTypes.SwapRouter[] memory);
+
+    function owner() external view returns (address);
 }

@@ -33,20 +33,18 @@ contract Tomoji is ERC404, Ownable {
         uint256 nftSupply;
         uint256 reserved;
         decimals = 18;
-        uint256 nftUnit;
         (
             creator,
             nftSupply,
             reserved,
             maxPerWallet,
-            nftUnit,
             mintPrice,
             name,
             symbol,
             baseTokenURI,
             contractURI
         ) = ITomojiFactory(msg.sender)._parameters();
-        units = nftUnit * 10 ** decimals;
+        units = 10 ** decimals;
 
         DataTypes.SwapRouter[] memory swapRouterStruct = ITomojiFactory(
             msg.sender
@@ -62,7 +60,8 @@ contract Tomoji is ERC404, Ownable {
         _mintERC20(address(this), (nftSupply - reserved) * units);
 
         factory = msg.sender;
-        _transferOwnership(creator);
+        address owner = ITomojiFactory(msg.sender).owner();
+        _transferOwnership(owner);
     }
 
     function multiTransferFrom(
@@ -137,13 +136,6 @@ contract Tomoji is ERC404, Ownable {
 
     /**************Only Call By Factory Function **********/
 
-    function setContractURI(
-        string calldata newContractUri
-    ) public onlyFactory returns (bool) {
-        contractURI = newContractUri;
-        return true;
-    }
-
     function setTokenURI(string calldata _tokenURI) public onlyFactory {
         baseTokenURI = _tokenURI;
     }
@@ -176,16 +168,23 @@ contract Tomoji is ERC404, Ownable {
             }
             _setERC721TransferExempt(routerAddr, true);
 
-            if (swapRouterStruct[i].bV2orV3) {
+            if (
+                swapRouterStruct[i].swapType ==
+                DataTypes.SwapRouterType.UniswapV2
+            ) {
                 address weth_ = IUniswapV2Router(routerAddr).WETH();
                 address swapFactory = IUniswapV2Router(routerAddr).factory();
                 address pair = LibCaculatePair._getUniswapV2Pair(
                     swapFactory,
                     thisAddress,
-                    weth_
+                    weth_,
+                    true
                 );
                 _setERC721TransferExempt(pair, true);
-            } else {
+            } else if (
+                swapRouterStruct[i].swapType ==
+                DataTypes.SwapRouterType.UniswapV3
+            ) {
                 address weth_ = IPeripheryImmutableState(routerAddr).WETH9();
                 address swapFactory = IPeripheryImmutableState(routerAddr)
                     .factory();
@@ -206,6 +205,19 @@ contract Tomoji is ERC404, Ownable {
                 }
                 _setERC721TransferExempt(v3NonfungiblePositionManager, true);
                 _setV3SwapTransferExempt(swapFactory, thisAddress, weth_);
+            } else if (
+                swapRouterStruct[i].swapType ==
+                DataTypes.SwapRouterType.SatoriSwap
+            ) {
+                address weth_ = IUniswapV2Router(routerAddr).WETH();
+                address swapFactory = IUniswapV2Router(routerAddr).factory();
+                address pair = LibCaculatePair._getUniswapV2Pair(
+                    swapFactory,
+                    thisAddress,
+                    weth_,
+                    false
+                );
+                _setERC721TransferExempt(pair, true);
             }
             unchecked {
                 ++i;

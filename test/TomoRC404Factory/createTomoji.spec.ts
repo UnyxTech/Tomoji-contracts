@@ -17,7 +17,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 10001,
                     maxPerWallet: 100,
-                    units: 100,
                     price: 10000,
                     name: "MoMo", 
                     symbol: "Momo", 
@@ -32,7 +31,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 0,
                     maxPerWallet: 100,
-                    units: 100,
                     price: 10000,
                     name: "MoMo", 
                     symbol: "Momo", 
@@ -44,7 +42,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 0,
                     maxPerWallet: 100,
-                    units: 100,
                     price: 10000,
                     name: "MoMo", 
                     symbol: "Momo", 
@@ -61,7 +58,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 100,
                     maxPerWallet: 100,
-                    units: 100,
                     price: 10000,
                     name: "MoMo", 
                     symbol: "Momo", 
@@ -75,7 +71,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                 let reserved0 = 0
                 let reserved1 = 2000
                 let maxPerWallet = 200
-                let units = 200
                 let price0 = 0
                 let price1 = 10000
                 let name = "Tomo-emoji"
@@ -89,7 +84,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                         nftTotalSupply: nftTotalSupply,
                         reserved: reserved1,
                         maxPerWallet: maxPerWallet,
-                        units: units,
                         price: price1,
                         name: name, 
                         symbol: symbol, 
@@ -103,9 +97,9 @@ makeSuiteCleanRoom('create ERC404', function () {
                 console.log(tomoErc404Address)
     
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                expect(await brc404Contract.units()).to.equal(ethers.parseEther("200"));
-                expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply-reserved1)*units).toString()));
-                expect(await brc404Contract.balanceOf(ownerAddress)).to.equal(ethers.parseEther(((reserved1)*units).toString()));
+                expect(await brc404Contract.units()).to.equal(ethers.parseEther("1"));
+                expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply-reserved1)).toString()));
+                expect(await brc404Contract.balanceOf(ownerAddress)).to.equal(ethers.parseEther(((reserved1)).toString()));
             })
         })
     })

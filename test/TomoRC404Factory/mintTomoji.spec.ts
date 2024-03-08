@@ -39,7 +39,6 @@ makeSuiteCleanRoom('Mint ERC404', function () {
                     nftTotalSupply: nftTotalSupply,
                     reserved: reserved1,
                     maxPerWallet: maxPerWallet,
-                    units: units,
                     price: price1,
                     name: name, 
                     symbol: symbol, 
@@ -53,7 +52,7 @@ makeSuiteCleanRoom('Mint ERC404', function () {
 
             let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
             expect(await brc404Contract.units()).to.equal(ethers.parseEther("1"));
-            expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply - reserved1)*units).toString()));
+            expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply - reserved1)).toString()));
         });
 
         context('Negatives', function () {

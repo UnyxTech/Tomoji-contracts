@@ -1,6 +1,7 @@
-import { ethers, Contract, ContractTransaction, utils } from 'ethers'
+import { ethers, Contract, ContractTransaction } from 'ethers'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
+import { splitSignature } from '@ethersproject/bytes'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import hre from 'hardhat';
 
@@ -87,8 +88,6 @@ export const deployAndVerifyAndThen = async ({
     log: true,
   })
 
-  await hre.ethers.provider.waitForTransaction(result.transactionHash)
-
   if (result.newlyDeployed) {
     if (!(await isHardhatNode(hre))) {
       // Verification sometimes fails, even when the contract is correctly deployed and eventually
@@ -154,9 +153,9 @@ export const getAdvancedContract = (opts: {
   }
 
   const contract = new Contract(
-    opts.contract.address,
+    opts.contract.target,
     opts.contract.interface,
-    opts.contract.signer || opts.contract.provider
+    opts.contract.runner
   )
 
   // Now reset Object.defineProperty
@@ -224,7 +223,7 @@ export const getContractFromArtifact = async (
   await hre.ethers.provider.waitForTransaction(artifact.receipt.transactionHash)
 
   // Get the deployed contract's interface.
-  let iface = new hre.ethers.utils.Interface(artifact.abi)
+  let iface = new hre.ethers.Interface(artifact.abi)
   // Override with optional iface name if requested.
   if (options.iface) {
     const factory = await hre.ethers.getContractFactory(options.iface)
@@ -266,7 +265,7 @@ export const getTomoImplAddr = async (hre: HardhatRuntimeEnvironment) =>  {
 }
 
 export async function waitForTx(tx: Promise<ContractTransaction>) {
-  await (await tx).wait();
+  (await tx);
 }
 
 export function getChainId(): number {
@@ -398,9 +397,9 @@ async function getSig(msgParams: {
   value: any;
 }): Promise<{ v: number; r: string; s: string }> {
   const signWallet = new ethers.Wallet(SIGN_PRIVATEKEY);
-  const sig = await signWallet._signTypedData(msgParams.domain, msgParams.types, msgParams.value);
-  return utils.splitSignature(sig);
+  const sig = await signWallet.signTypedData(msgParams.domain, msgParams.types, msgParams.value);
+  return splitSignature(sig);
 }
 
 // Large balance to fund accounts with.
-export const BIG_BALANCE = ethers.BigNumber.from(`0xFFFFFFFFFFFFFFFFFFFF`)
+export const BIG_BALANCE = ethers.MaxUint256

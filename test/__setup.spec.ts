@@ -61,7 +61,7 @@ before(async function () {
 
   expect(tomojiFactory).to.not.be.undefined;
 
-  await expect(tomojiFactory.connect(user).setContractURI(userTwoAddress, "MoMo", "")).to.be.reverted
+  await expect(tomojiFactory.connect(user).setTokenURI(userTwoAddress, "MoMo", "")).to.be.reverted
 
   eventsLib = await new Events__factory(deployer).deploy();
 });
