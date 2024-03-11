@@ -8,9 +8,22 @@ const deployFn: DeployFunction = async (hre) => {
   
   const { deployer, owner } = await hre.getNamedAccounts()
   const swapRouterArray = [
+    //uniswap v2
     {
-      bV2orV3: true,
-      routerAddr: '0x3512ebD0Eb455f2FFDE4908D24F64aba7995951C',
+      swapType: 0,
+      routerAddr: '0xD6e0Bc285be97C75861910f4d2cFD4AC61DD629d',
+      uniswapV3NonfungiblePositionManager: ZeroAddress,
+    },
+    //uniswap v3
+    {
+      swapType: 1,
+      routerAddr: '0x2626664c2603336E57B271c5C0b26F421741e481',
+      uniswapV3NonfungiblePositionManager: '0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1',
+    },
+    //satori
+    {
+      swapType: 2,
+      routerAddr: '0xf4038D237C553Bf246f7d1A377830601D72f2AB8',
       uniswapV3NonfungiblePositionManager: ZeroAddress,
     },
   ];
