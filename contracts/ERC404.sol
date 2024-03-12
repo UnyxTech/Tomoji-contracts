@@ -54,9 +54,6 @@ abstract contract ERC404 is IERC404 {
     /// @dev Addresses that are exempt from ERC-721 transfer, typically for gas savings (pairs, routers, etc)
     mapping(address => bool) internal _erc721TransferExempt;
 
-    /// @dev EIP-2612 nonces
-    mapping(address => uint256) public nonces;
-
     /// @dev Address bitmask for packed ownership data
     uint256 private constant _BITMASK_ADDRESS = (1 << 160) - 1;
 
