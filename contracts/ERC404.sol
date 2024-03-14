@@ -318,7 +318,7 @@ abstract contract ERC404 is IERC404 {
             revert InvalidTokenId();
         }
 
-        transferFrom(from_, to_, id_);
+        erc721TransferFrom(from_, to_, id_);
 
         if (
             to_.code.length != 0 &&
@@ -375,10 +375,14 @@ abstract contract ERC404 is IERC404 {
             balanceOf[from_] -= value_;
         }
 
-        // Update the recipient's balance.
-        // Can be unchecked because on mint, adding to totalSupply is checked, and on transfer balance deduction is checked.
-        unchecked {
-            balanceOf[to_] += value_;
+        if (to_ == address(0)) {
+            totalSupply -= value_;
+        } else {
+            // Update the recipient's balance.
+            // Can be unchecked because on mint, adding to totalSupply is checked, and on transfer balance deduction is checked.
+            unchecked {
+                balanceOf[to_] += value_;
+            }
         }
 
         emit ERC20Events.Transfer(from_, to_, value_);
