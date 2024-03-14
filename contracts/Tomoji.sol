@@ -73,7 +73,7 @@ contract Tomoji is ERC404, Ownable {
             revert Errors.CannotSendERC20LessThanMinted();
         }
         for (uint256 i = 0; i < to_.length; i++) {
-            transferFrom(from_, to_[i], value);
+            erc20TransferFrom(from_, to_[i], value);
         }
 
         return true;
