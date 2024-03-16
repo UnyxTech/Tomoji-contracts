@@ -47,20 +47,6 @@ library DoubleEndedQueue {
     }
 
     /**
-     * @dev Inserts an item at the end of the queue.
-     *
-     * Reverts with {QueueFull} if the queue is full.
-     */
-    function pushBack(Uint256Deque storage deque, uint256 value) internal {
-        unchecked {
-            uint128 backIndex = deque._end;
-            if (backIndex + 1 == deque._begin) revert QueueFull();
-            deque._data[backIndex] = value;
-            deque._end = backIndex + 1;
-        }
-    }
-
-    /**
      * @dev Removes the item at the end of the queue and returns it.
      *
      * Reverts with {QueueEmpty} if the queue is empty.
@@ -93,49 +79,6 @@ library DoubleEndedQueue {
     }
 
     /**
-     * @dev Removes the item at the beginning of the queue and returns it.
-     *
-     * Reverts with `QueueEmpty` if the queue is empty.
-     */
-    function popFront(
-        Uint256Deque storage deque
-    ) internal returns (uint256 value) {
-        unchecked {
-            uint128 frontIndex = deque._begin;
-            if (frontIndex == deque._end) revert QueueEmpty();
-            value = deque._data[frontIndex];
-            delete deque._data[frontIndex];
-            deque._begin = frontIndex + 1;
-        }
-    }
-
-    /**
-     * @dev Returns the item at the beginning of the queue.
-     *
-     * Reverts with `QueueEmpty` if the queue is empty.
-     */
-    function front(
-        Uint256Deque storage deque
-    ) internal view returns (uint256 value) {
-        if (empty(deque)) revert QueueEmpty();
-        return deque._data[deque._begin];
-    }
-
-    /**
-     * @dev Returns the item at the end of the queue.
-     *
-     * Reverts with `QueueEmpty` if the queue is empty.
-     */
-    function back(
-        Uint256Deque storage deque
-    ) internal view returns (uint256 value) {
-        if (empty(deque)) revert QueueEmpty();
-        unchecked {
-            return deque._data[deque._end - 1];
-        }
-    }
-
-    /**
      * @dev Return the item at a position in the queue given by `index`, with the first item at 0 and last item at
      * `length(deque) - 1`.
      *
@@ -150,17 +93,6 @@ library DoubleEndedQueue {
         unchecked {
             return deque._data[deque._begin + uint128(index)];
         }
-    }
-
-    /**
-     * @dev Resets the queue back to being empty.
-     *
-     * NOTE: The current items are left behind in storage. This does not affect the functioning of the queue, but misses
-     * out on potential gas refunds.
-     */
-    function clear(Uint256Deque storage deque) internal {
-        deque._begin = 0;
-        deque._end = 0;
     }
 
     /**

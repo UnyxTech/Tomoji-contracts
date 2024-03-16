@@ -1,17 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {TransferHelper} from "./libraries/TransferHelper.sol";
 import {IERC404} from "./interfaces/IERC404.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
-import {Events} from "./libraries/Events.sol";
-import {Errors} from "./libraries/Errors.sol";
 
 contract TomojiClaim is Ownable {
-    using EnumerableSet for EnumerableSet.AddressSet;
+    error ArrayLengthError();
+    error InvaildId();
+    error NotExist();
+    error InvaildParam();
+    error MerkleProofVerifyFailed();
+    error EmptyMerkleRoot();
+    error AlreadyFinish();
+    error NotEnough();
+    error AlreadyClaimed();
+    error ZeroAddress();
+
+    event SendTomojiToken(
+        address indexed sponsor,
+        string name,
+        uint256 emojiClaimId,
+        uint256 emojiTokenAmount
+    );
 
     struct TomojiTokenClaimStruct {
         address sponsor;
@@ -20,7 +33,7 @@ contract TomojiClaim is Ownable {
         uint256 claimed;
         uint256 left;
         bytes32 merkleRoot;
-        EnumerableSet.AddressSet claimedUser;
+        mapping(address => bool) claimedUser;
     }
     uint256 public _nextTomojiClaimId;
     address public _tomojiFactory;
@@ -36,14 +49,14 @@ contract TomojiClaim is Ownable {
         bytes32 merkleRoot
     ) external {
         if (emojiTokenAmount == 0 || merkleRoot == bytes32(0)) {
-            revert Errors.InvaildParam();
+            revert InvaildParam();
         }
         address erc404Addr = ITomojiFactory(_tomojiFactory).erc404Contract(
             msg.sender,
             name
         );
         if (erc404Addr == address(0x0)) {
-            revert Errors.NotExist();
+            revert NotExist();
         }
         bool isExempt = IERC404(erc404Addr).erc721TransferExempt(address(this));
         if (!isExempt) {
@@ -65,17 +78,12 @@ contract TomojiClaim is Ownable {
             emojiTokenAmount
         );
 
-        emit Events.SendTomojiToken(
-            msg.sender,
-            name,
-            emojiClaimId,
-            emojiTokenAmount
-        );
+        emit SendTomojiToken(msg.sender, name, emojiClaimId, emojiTokenAmount);
     }
 
     function updateFactoryAddr(address factory) external onlyOwner {
         if (factory == address(0x0)) {
-            revert Errors.ZeroAddress();
+            revert ZeroAddress();
         }
         _tomojiFactory = factory;
     }
@@ -88,12 +96,12 @@ contract TomojiClaim is Ownable {
             emojiClaimIds.length != merkleRoots.length ||
             emojiClaimIds.length == 0
         ) {
-            revert Errors.ArrayLengthError();
+            revert ArrayLengthError();
         }
         for (uint256 i = 0; i < emojiClaimIds.length; i++) {
             uint256 id = emojiClaimIds[i];
             if (id >= _nextTomojiClaimId) {
-                revert Errors.InvaildId();
+                revert InvaildId();
             }
             _tomojiTokenClaim[id].merkleRoot = merkleRoots[i];
         }
@@ -105,16 +113,16 @@ contract TomojiClaim is Ownable {
         bytes32[] calldata merkleProof
     ) external {
         if (_tomojiTokenClaim[emojiClaimId].merkleRoot == bytes32(0)) {
-            revert Errors.EmptyMerkleRoot();
+            revert EmptyMerkleRoot();
         }
         if (_tomojiTokenClaim[emojiClaimId].left == 0) {
-            revert Errors.AlreadyFinish();
+            revert AlreadyFinish();
         }
         if (_tomojiTokenClaim[emojiClaimId].left < claimAmount) {
-            revert Errors.NotEnough();
+            revert NotEnough();
         }
-        if (_tomojiTokenClaim[emojiClaimId].claimedUser.contains(msg.sender)) {
-            revert Errors.AlreadyClaimed();
+        if (_tomojiTokenClaim[emojiClaimId].claimedUser[msg.sender]) {
+            revert AlreadyClaimed();
         }
         bytes32 leafNode = keccak256(
             abi.encodePacked(emojiClaimId, msg.sender, claimAmount)
@@ -126,9 +134,9 @@ contract TomojiClaim is Ownable {
                 leafNode
             )
         ) {
-            revert Errors.MerkleProofVerifyFailed();
+            revert MerkleProofVerifyFailed();
         }
-        _tomojiTokenClaim[emojiClaimId].claimedUser.add(msg.sender);
+        _tomojiTokenClaim[emojiClaimId].claimedUser[msg.sender] = true;
         _tomojiTokenClaim[emojiClaimId].claimed += claimAmount;
         _tomojiTokenClaim[emojiClaimId].left -= claimAmount;
 

@@ -4,13 +4,34 @@ pragma solidity ^0.8.17;
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {Tomoji} from "./Tomoji.sol";
-import {Events} from "./libraries/Events.sol";
-import {Errors} from "./libraries/Errors.sol";
 
 contract TomojiFactory is OwnableUpgradeable {
+    error InvaildParam();
+    error ReservedTooMuch();
+    error PreSaleDeadLineTooFar();
+    error ContractAlreadyExist();
+    error ZeroAddress();
+    event ERC404Created(
+        address indexed addr,
+        address indexed creator,
+        uint256 totalSupply,
+        uint256 reserved,
+        uint256 maxPerWallet,
+        uint256 price,
+        uint256 preSaleDeadLine,
+        string name,
+        string symbol,
+        string baseURI,
+        string contractURI
+    );
+
     DataTypes.CreateERC404Parameters public _parameters;
-    DataTypes.SwapRouter[] public _swapRouterAddr;
+    DataTypes.SwapRouter private _swapRouter;
     mapping(address => mapping(string => address)) public _erc404Contract;
+    uint256 public maxReservePercentage; //defaule 1000 as 10%
+    uint256 public maxPreSaleTime; //defaule 7 days
+    address public protocolFeeAddress;
+    uint256 public protocolPercentage;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -19,28 +40,33 @@ contract TomojiFactory is OwnableUpgradeable {
 
     function initialize(
         address owner,
-        DataTypes.SwapRouter[] memory swapRouterAddr
+        DataTypes.SwapRouter memory swapRouter
     ) public initializer {
         __Ownable_init(owner);
-        for (uint256 i = 0; i < swapRouterAddr.length; ) {
-            _swapRouterAddr.push(swapRouterAddr[i]);
-            unchecked {
-                i++;
-            }
-        }
+        _swapRouter = swapRouter;
+
+        maxReservePercentage = 1000;
+        maxPreSaleTime = 7 * 24 * 60 * 60;
+        protocolFeeAddress = owner;
     }
 
     function createERC404(
         DataTypes.CreateERC404Parameters calldata vars
     ) external returns (address erc404) {
         if (msg.sender != vars.creator) {
-            revert Errors.InvaildParam();
+            revert InvaildParam();
         }
-        if (vars.reserved >= vars.nftTotalSupply) {
-            revert Errors.ReservedTooMuch();
+        if (
+            vars.reserved >=
+            (vars.nftTotalSupply * maxReservePercentage) / 10000
+        ) {
+            revert ReservedTooMuch();
+        }
+        if (vars.preSaleDeadLine > block.timestamp + maxPreSaleTime) {
+            revert PreSaleDeadLineTooFar();
         }
         if (_erc404Contract[vars.creator][vars.name] != address(0x0)) {
-            revert Errors.ContractAlreadyExist();
+            revert ContractAlreadyExist();
         }
         _parameters = vars;
         erc404 = address(
@@ -52,13 +78,14 @@ contract TomojiFactory is OwnableUpgradeable {
         );
         _erc404Contract[vars.creator][vars.name] = erc404;
         delete _parameters;
-        emit Events.ERC404Created(
+        emit ERC404Created(
             erc404,
             vars.creator,
             vars.nftTotalSupply,
             vars.reserved,
             vars.maxPerWallet,
             vars.price,
+            vars.preSaleDeadLine,
             vars.name,
             vars.symbol,
             vars.baseURI,
@@ -72,7 +99,7 @@ contract TomojiFactory is OwnableUpgradeable {
         string calldata _tokenURI
     ) public onlyOwner returns (bool) {
         if (_erc404Contract[creator][name] == address(0x0)) {
-            revert Errors.ZeroAddress();
+            revert ZeroAddress();
         }
         Tomoji(_erc404Contract[creator][name]).setTokenURI(_tokenURI);
         return true;
@@ -85,7 +112,7 @@ contract TomojiFactory is OwnableUpgradeable {
         bool state
     ) public onlyOwner returns (bool) {
         if (_erc404Contract[creator][name] == address(0x0)) {
-            revert Errors.ZeroAddress();
+            revert ZeroAddress();
         }
         Tomoji(_erc404Contract[creator][name]).setERC721TransferExempt(
             exemptAddrs,
@@ -95,22 +122,39 @@ contract TomojiFactory is OwnableUpgradeable {
     }
 
     function setSwapRouter(
-        DataTypes.SwapRouter[] memory swapRouterAddr
+        DataTypes.SwapRouter memory swapRouter
     ) public onlyOwner {
-        delete _swapRouterAddr;
-        for (uint256 i = 0; i < swapRouterAddr.length; ) {
-            _swapRouterAddr.push(swapRouterAddr[i]);
-            unchecked {
-                i++;
-            }
-        }
+        _swapRouter = swapRouter;
     }
 
-    function getSwapRouter()
-        public
-        view
-        returns (DataTypes.SwapRouter[] memory)
-    {
-        return _swapRouterAddr;
+    function setMaxReservePercentage(
+        uint256 newReservePercentage
+    ) public onlyOwner {
+        if (newReservePercentage > 5000) {
+            revert ReservedTooMuch();
+        }
+        maxReservePercentage = newReservePercentage;
+    }
+
+    function setMaxPreSaleTime(uint256 newMaxPreSaleTime) public onlyOwner {
+        maxPreSaleTime = newMaxPreSaleTime;
+    }
+
+    function setProtocolFeeAddress(address newAddress) public onlyOwner {
+        if (newAddress == address(0)) {
+            revert ZeroAddress();
+        }
+        protocolFeeAddress = newAddress;
+    }
+
+    function setProtocolFeePercentage(uint256 newPercentage) public onlyOwner {
+        if (newPercentage > 10000) {
+            revert InvaildParam();
+        }
+        protocolPercentage = newPercentage;
+    }
+
+    function getSwapRouter() public view returns (DataTypes.SwapRouter memory) {
+        return _swapRouter;
     }
 }

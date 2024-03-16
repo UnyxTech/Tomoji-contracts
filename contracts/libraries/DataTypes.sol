@@ -15,20 +15,14 @@ library DataTypes {
         uint256 reserved;
         uint256 maxPerWallet;
         uint256 price;
+        uint256 preSaleDeadLine;
         string name;
         string symbol;
         string baseURI;
         string contractURI;
     }
 
-    enum SwapRouterType {
-        UniswapV2,
-        UniswapV3,
-        SatoriSwap
-    }
-
     struct SwapRouter {
-        SwapRouterType swapType;
         address routerAddr;
         address uniswapV3NonfungiblePositionManager;
     }

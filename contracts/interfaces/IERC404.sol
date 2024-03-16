@@ -31,15 +31,11 @@ interface IERC404 is IERC165 {
 
     function totalSupply() external view returns (uint256);
 
-    function erc20TotalSupply() external view returns (uint256);
-
     function erc721TotalSupply() external view returns (uint256);
 
     function balanceOf(address owner_) external view returns (uint256);
 
     function erc721BalanceOf(address owner_) external view returns (uint256);
-
-    function erc20BalanceOf(address owner_) external view returns (uint256);
 
     function erc721TransferExempt(
         address account_
@@ -54,8 +50,6 @@ interface IERC404 is IERC165 {
         address owner_,
         address spender_
     ) external view returns (uint256);
-
-    function owned(address owner_) external view returns (uint256[] memory);
 
     function ownerOf(uint256 id_) external view returns (address erc721Owner);
 
