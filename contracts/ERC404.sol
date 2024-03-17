@@ -75,10 +75,26 @@ abstract contract ERC404 is IERC404 {
         }
     }
 
+    function owned(
+        address owner_
+    ) public view virtual returns (uint256[] memory) {
+        return _owned[owner_];
+    }
+
     function erc721BalanceOf(
         address owner_
     ) public view virtual returns (uint256) {
         return _owned[owner_].length;
+    }
+
+    function erc20BalanceOf(
+        address owner_
+    ) public view virtual returns (uint256) {
+        return balanceOf[owner_];
+    }
+
+    function erc20TotalSupply() public view virtual returns (uint256) {
+        return totalSupply;
     }
 
     function erc721TotalSupply() public view virtual returns (uint256) {
@@ -423,8 +439,8 @@ abstract contract ERC404 is IERC404 {
         address to_,
         uint256 value_
     ) internal virtual returns (bool) {
-        uint256 erc20BalanceOfSenderBefore = balanceOf[from_];
-        uint256 erc20BalanceOfReceiverBefore = balanceOf[to_];
+        uint256 erc20BalanceOfSenderBefore = erc20BalanceOf(from_);
+        uint256 erc20BalanceOfReceiverBefore = erc20BalanceOf(to_);
 
         _transferERC20(from_, to_, value_);
 
@@ -443,7 +459,7 @@ abstract contract ERC404 is IERC404 {
             //         to transfer ERC-721s from the sender, but the recipient should receive ERC-721s
             //         from the bank/minted for any whole number increase in their balance.
             // Only cares about whole number increments.
-            uint256 tokensToRetrieveOrMint = (balanceOf[to_] / units) -
+            uint256 tokensToRetrieveOrMint = (erc20BalanceOf(to_) / units) -
                 (erc20BalanceOfReceiverBefore / units);
             for (uint256 i = 0; i < tokensToRetrieveOrMint; ) {
                 _retrieveOrMintERC721(to_);
@@ -457,7 +473,7 @@ abstract contract ERC404 is IERC404 {
             //         receive ERC-721s from the bank/minted.
             // Only cares about whole number increments.
             uint256 tokensToWithdrawAndStore = (erc20BalanceOfSenderBefore /
-                units) - (balanceOf[from_] / units);
+                units) - (erc20BalanceOf(from_) / units);
             for (uint256 i = 0; i < tokensToWithdrawAndStore; ) {
                 _withdrawAndStoreERC721(from_);
                 unchecked {
@@ -499,7 +515,10 @@ abstract contract ERC404 is IERC404 {
             // If this is a self-send and the before and after balances are equal (not always the case but often),
             // then no ERC-721s will be lost here.
             if (
-                erc20BalanceOfSenderBefore / units - balanceOf[from_] / units >
+                erc20BalanceOfSenderBefore /
+                    units -
+                    erc20BalanceOf(from_) /
+                    units >
                 nftsToTransfer
             ) {
                 _withdrawAndStoreERC721(from_);
@@ -514,7 +533,10 @@ abstract contract ERC404 is IERC404 {
             // an additional ERC-721 gained due to the fractional portion of the transfer.
             // Again, for self-sends where the before and after balances are equal, no ERC-721s will be gained here.
             if (
-                balanceOf[to_] / units - erc20BalanceOfReceiverBefore / units >
+                erc20BalanceOf(to_) /
+                    units -
+                    erc20BalanceOfReceiverBefore /
+                    units >
                 nftsToTransfer
             ) {
                 _retrieveOrMintERC721(to_);
@@ -617,7 +639,7 @@ abstract contract ERC404 is IERC404 {
 
     /// @notice Function to reinstate balance on exemption removal
     function _reinstateERC721Balance(address target_) private {
-        uint256 expectedERC721Balance = balanceOf[target_] / units;
+        uint256 expectedERC721Balance = erc20BalanceOf(target_) / units;
         uint256 actualERC721Balance = erc721BalanceOf(target_);
 
         for (uint256 i = 0; i < expectedERC721Balance - actualERC721Balance; ) {

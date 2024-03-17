@@ -24,10 +24,7 @@ interface ITomojiFactory {
         string calldata name
     ) external view returns (address);
 
-    function getSwapRouter()
-        external
-        view
-        returns (DataTypes.SwapRouter memory);
+    function _tomojiManager() external view returns (address);
 
     function protocolFeeAddress() external view returns (address);
 
