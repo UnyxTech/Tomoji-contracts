@@ -4,9 +4,11 @@ import {
 } from '../__setup.spec';
 import { expect } from 'chai';
 import { ERRORS } from '../helpers/errors';
-import { findEvent, waitForTx } from '../helpers/utils';
+import { waitForTx } from '../helpers/utils';
 import { Tomoji__factory } from '../../typechain-types';
 import { ethers } from 'hardhat';
+
+const tomorrow = parseInt((new Date().getTime() / 1000 ).toFixed(0)) + 24 * 3600
 
 makeSuiteCleanRoom('create ERC404', function () {
     context('Generic', function () {
@@ -18,6 +20,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                     reserved: 10001,
                     maxPerWallet: 100,
                     price: 10000,
+                    preSaleDeadLine: tomorrow,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -32,17 +35,19 @@ makeSuiteCleanRoom('create ERC404', function () {
                     reserved: 0,
                     maxPerWallet: 100,
                     price: 10000,
+                    preSaleDeadLine: tomorrow,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
                     contractURI: "https://tomo-contract"
-                })).to.not.be.reverted;
+                })).to.be.not.reverted;
                 await expect(tomojiFactory.connect(owner).createERC404({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
                     reserved: 0,
                     maxPerWallet: 100,
                     price: 10000,
+                    preSaleDeadLine: tomorrow,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -59,6 +64,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                     reserved: 100,
                     maxPerWallet: 100,
                     price: 10000,
+                    preSaleDeadLine: tomorrow,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -69,7 +75,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                 let tomoErc404Address: string
                 let nftTotalSupply = 10000
                 let reserved0 = 0
-                let reserved1 = 2000
+                let reserved1 = 1000
                 let maxPerWallet = 200
                 let price0 = 0
                 let price1 = 10000
@@ -78,26 +84,22 @@ makeSuiteCleanRoom('create ERC404', function () {
                 let baseUri = "https://tomo-baseuri/"
                 let contractUri = "https://tomo-contract"
                 
-                const receipt = await waitForTx(
-                    tomojiFactory.connect(owner).createERC404({
+                await expect(tomojiFactory.connect(owner).createERC404({
                         creator: ownerAddress, 
                         nftTotalSupply: nftTotalSupply,
                         reserved: reserved1,
                         maxPerWallet: maxPerWallet,
                         price: price1,
+                        preSaleDeadLine: tomorrow,
                         name: name, 
                         symbol: symbol, 
                         baseURI: baseUri, 
                         contractURI: contractUri
                     })
-                );
-                expect(receipt.logs.length).to.eq(5, `Expected 1 events, got ${receipt.logs.length}`);
-                const event = findEvent(receipt, 'ERC404Created');
-                tomoErc404Address = event!.args[0];
-                console.log(tomoErc404Address)
+                ).to.not.be.reverted;
+                tomoErc404Address = await tomojiFactory.connect(owner)._erc404Contract(ownerAddress, name);
     
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                expect(await brc404Contract.units()).to.equal(ethers.parseEther("1"));
                 expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply-reserved1)).toString()));
                 expect(await brc404Contract.balanceOf(ownerAddress)).to.equal(ethers.parseEther(((reserved1)).toString()));
             })

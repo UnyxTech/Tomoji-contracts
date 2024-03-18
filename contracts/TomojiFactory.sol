@@ -60,7 +60,7 @@ contract TomojiFactory is OwnableUpgradeable {
                 revert InvaildParam();
             }
             if (
-                vars.reserved >=
+                vars.reserved >
                 (vars.nftTotalSupply * maxReservePercentage) / 10000
             ) {
                 revert ReservedTooMuch();

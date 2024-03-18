@@ -1,15 +1,16 @@
 
 import { expect } from 'chai';
 import { Signer, Wallet } from 'ethers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 import {
   Tomoji,
   TomojiFactory__factory,
   TomojiFactory,
-  Events,
-  Events__factory
+  TomojiManager__factory,
+  TomojiManager
 } from '../typechain-types';
 import {
+  computeContractAddress,
   revertToSnapshot,
   takeSnapshot
 } from './helpers/utils';
@@ -24,7 +25,7 @@ export let ownerAddress: string;
 export let userAddress: string;
 export let userTwoAddress: string;
 export let tomojiFactory: TomojiFactory;
-export let eventsLib: Events;
+export let tomojiManager: TomojiManager;
 
 export let signWallet: Wallet;
 
@@ -57,11 +58,25 @@ before(async function () {
   userTwoAddress = await userTwo.getAddress();
   ownerAddress = await owner.getAddress();
 
-  tomojiFactory = await new TomojiFactory__factory(deployer).deploy();
+  const nonce = await deployer.getNonce();
+  const TomojiFactoryProxyAddress = computeContractAddress(deployerAddress, nonce + 2);
 
-  expect(tomojiFactory).to.not.be.undefined;
+  const swapRouter = 
+  //uniswap v3
+  {
+    routerAddr: '0x2626664c2603336E57B271c5C0b26F421741e481',
+    uniswapV3NonfungiblePositionManager: '0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1',
+  }
+  tomojiManager = await new TomojiManager__factory(deployer).deploy(swapRouter, TomojiFactoryProxyAddress);
+
+  const TomojiFactory = await ethers.getContractFactory("TomojiFactory");
+  const proxy = await upgrades.deployProxy(TomojiFactory, [ownerAddress, await tomojiManager.getAddress()]);
+  const proxyAddress = await proxy.getAddress()
+  console.log("proxy address: ", proxyAddress)
+  console.log("admin address: ", await upgrades.erc1967.getAdminAddress(proxyAddress))
+  console.log("implement address: ", await upgrades.erc1967.getImplementationAddress(proxyAddress))
+
+  tomojiFactory = TomojiFactory__factory.connect(proxyAddress)
 
   await expect(tomojiFactory.connect(user).setTokenURI(userTwoAddress, "MoMo", "")).to.be.reverted
-
-  eventsLib = await new Events__factory(deployer).deploy();
 });
