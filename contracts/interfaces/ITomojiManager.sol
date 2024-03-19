@@ -8,7 +8,7 @@ interface ITomojiManager {
     function prePairTomojiEnv(
         address tomojiAddr,
         uint256 price
-    ) external returns (bool);
+    ) external returns (address);
 
     function addLiquidityForTomoji(
         address tomojiAddr,

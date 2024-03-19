@@ -13,12 +13,12 @@ async function main() {
   const [deployer] = await hre.ethers.getSigners();
 
   const tomorrow = parseInt((new Date().getTime() / 1000 ).toFixed(0)) + 24 * 3600
-  const proxyAddr = "0x89f1a1C6f019f70dc14F5E72C0c43f4Ce5193C51"
+  const proxyAddr = "0x1b8de2c4c79b765Fabb2fd7A41fE176d02CE6869"
   // const tomojiFactory = TomojiFactory__factory.connect(proxyAddr)
   // const tomojiManagerAddr = await tomojiFactory.connect(deployer)._erc404Contract(deployer.address, "MoMonkey");
   // console.log("tomoji addr: ", tomojiManagerAddr)
 
-  const manager = "0x526f32EED97342d4c6960d26d5326EB82871E210"
+  const manager = "0x975842E175Ed429391eF22CA5559Bd954AA9046b"
   const tomojiManager = TomojiManager__factory.connect(manager)
   const factory = await tomojiManager.connect(deployer)._factory();
   console.log("proxyAddress: ", factory)

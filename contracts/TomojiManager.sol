@@ -79,19 +79,19 @@ contract TomojiManager is ITomojiManager {
     function prePairTomojiEnv(
         address tomojiAddr,
         uint256 mintPrice
-    ) public override onlyFactory returns (bool) {
+    ) public override onlyFactory returns (address) {
         address v3NonfungiblePositionManager = _swapRouter
             .uniswapV3NonfungiblePositionManager;
         address weth_ = INonfungiblePositionManager(
             v3NonfungiblePositionManager
         ).WETH9();
-        _createUniswapV3Pool(
+        address pool = _createUniswapV3Pool(
             v3NonfungiblePositionManager,
             tomojiAddr,
             weth_,
             mintPrice
         );
-        return true;
+        return pool;
     }
 
     function addLiquidityForTomoji(
@@ -218,7 +218,7 @@ contract TomojiManager is ITomojiManager {
         address tokenA,
         address tokenB,
         uint256 mintPrice
-    ) internal {
+    ) internal returns (address) {
         (address token0, address token1, bool zeroForOne) = tokenA < tokenB
             ? (tokenA, tokenB, true)
             : (tokenB, tokenA, false);
@@ -239,6 +239,7 @@ contract TomojiManager is ITomojiManager {
         if (pool == address(0)) {
             revert CreatePairFailed();
         }
+        return pool;
     }
 
     function _mintLiquidity(

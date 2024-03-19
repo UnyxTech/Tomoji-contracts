@@ -6,6 +6,7 @@ import {DataTypes} from "./libraries/DataTypes.sol";
 import {Tomoji} from "./Tomoji.sol";
 import {ITomoji} from "./interfaces/ITomoji.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
+import "hardhat/console.sol";
 
 contract TomojiFactory is OwnableUpgradeable {
     error InvaildParam();
@@ -95,6 +96,12 @@ contract TomojiFactory is OwnableUpgradeable {
                 }()
             );
             _erc404Contract[vars.creator][vars.name] = erc404;
+            console.log("erc404: ", erc404);
+            address pool = ITomojiManager(_tomojiManager).prePairTomojiEnv(
+                erc404,
+                vars.price
+            );
+            console.log("pool: ", pool);
             delete _parameters;
         }
         emit ERC404Created(
@@ -112,25 +119,25 @@ contract TomojiFactory is OwnableUpgradeable {
         );
     }
 
-    function createUniswapV3PairForTomoji(
-        address creator,
-        string calldata name
-    ) public returns (bool) {
-        address erc404 = _erc404Contract[creator][name];
-        if (erc404 == address(0x0)) {
-            revert ContractNotExist();
-        }
-        uint256 price = ITomoji(erc404).mintPrice();
+    // function createUniswapV3PairForTomoji(
+    //     address creator,
+    //     string calldata name
+    // ) public returns (bool) {
+    //     address erc404 = _erc404Contract[creator][name];
+    //     if (erc404 == address(0x0)) {
+    //         revert ContractNotExist();
+    //     }
+    //     uint256 price = ITomoji(erc404).mintPrice();
 
-        bool ret = ITomojiManager(_tomojiManager).prePairTomojiEnv(
-            erc404,
-            price
-        );
-        if (!ret) {
-            revert PrepairTomojiEnvFailed();
-        }
-        return true;
-    }
+    //     bool ret = ITomojiManager(_tomojiManager).prePairTomojiEnv(
+    //         erc404,
+    //         price
+    //     );
+    //     if (!ret) {
+    //         revert PrepairTomojiEnvFailed();
+    //     }
+    //     return true;
+    // }
 
     function setTokenURI(
         address creator,

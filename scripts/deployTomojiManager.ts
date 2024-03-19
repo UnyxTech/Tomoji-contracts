@@ -2,7 +2,7 @@ import hre from 'hardhat';
 import { ethers, upgrades } from 'hardhat';
 import { hexlify, keccak256, toBeHex} from 'ethers';
 import { encode } from '@ethersproject/rlp'
-import { TomojiFactory__factory, TomojiManager__factory } from '../typechain-types';
+import { TomojiManager__factory } from '../typechain-types';
 
 async function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,9 +37,10 @@ async function main() {
   console.log("implement address: ", await upgrades.erc1967.getImplementationAddress(proxyAddress))
 
   const tomojiManagerContract = TomojiManager__factory.connect(tomojiManagerAddr)
+  console.log("before factory: ", await tomojiManagerContract.connect(deployer)._factory())
   const tx = await tomojiManagerContract.connect(deployer).setFactory(proxyAddress);
   tx.wait()
-  console.log("factory: ", await tomojiManagerContract.connect(deployer)._factory())
+  console.log("after factory: ", await tomojiManagerContract.connect(deployer)._factory())
 }
 
 main()
