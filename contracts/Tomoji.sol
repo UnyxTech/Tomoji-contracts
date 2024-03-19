@@ -5,10 +5,11 @@ pragma solidity ^0.8.17;
 import {ERC404} from "./ERC404.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
+import {INonfungiblePositionManager} from "./interfaces/INonfungiblePositionManager.sol";
 import {Strings} from "./libraries/Strings.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {LibCaculatePair} from "./libraries/LibCaculatePair.sol";
 
-contract Tomoji is ERC404, Ownable {
+contract Tomoji is ERC404 {
     error OnlyCallByFactoryOrManager();
     error InvaildParam();
     error ReachMaxPerMint();
@@ -17,15 +18,16 @@ contract Tomoji is ERC404, Ownable {
     error PresaleNotFinshed();
     error SendETHFailed();
     error ZeroAddress();
-
-    string private baseTokenURI;
-    string public contractURI;
-    uint256 private maxPerWallet;
-    uint256 private mintPrice;
-    uint256 private preSaleDeadLine;
-    uint256 private preSaleAmountLeft;
+    error X404SwapV3FactoryMismatch();
 
     address public _tomojiManager;
+    uint256 public mintPrice;
+    string public contractURI;
+    string private baseTokenURI;
+    uint256 private maxPerWallet;
+    uint256 private preSaleDeadLine;
+    uint256 private preSaleAmountLeft;
+    address private _owner;
 
     mapping(address => uint) private mintAccount;
     address public immutable creator;
@@ -38,7 +40,7 @@ contract Tomoji is ERC404, Ownable {
         _;
     }
 
-    constructor() Ownable(msg.sender) {
+    constructor() {
         uint256 nftSupply;
         uint256 reserved;
         decimals = 18;
@@ -56,15 +58,17 @@ contract Tomoji is ERC404, Ownable {
         ) = ITomojiFactory(msg.sender)._parameters();
         units = 10 ** decimals;
 
-        _setERC721TransferExempt(creator, true);
-        _setERC721TransferExempt(address(this), true);
+        _erc721TransferExempt[creator] = true;
+        _erc721TransferExempt[address(this)] = true;
         _tomojiManager = ITomojiFactory(msg.sender)._tomojiManager();
         (
             address router,
             address v3NonfungiblePositionManagerAddress
         ) = ITomojiManager(_tomojiManager).getSwapRouter();
-        _setERC721TransferExempt(router, true);
-        _setERC721TransferExempt(v3NonfungiblePositionManagerAddress, true);
+        _erc721TransferExempt[router] = true;
+        _erc721TransferExempt[v3NonfungiblePositionManagerAddress] = true;
+        _setV3SwapTransferExempt(v3NonfungiblePositionManagerAddress);
+
         allowance[address(this)][v3NonfungiblePositionManagerAddress] = type(
             uint256
         ).max;
@@ -77,7 +81,7 @@ contract Tomoji is ERC404, Ownable {
         preSaleAmountLeft = (nftSupply - reserved) / 2;
 
         factory = msg.sender;
-        _transferOwnership(creator);
+        _owner = creator;
     }
 
     function multiTransfer(
@@ -168,6 +172,14 @@ contract Tomoji is ERC404, Ownable {
         return true;
     }
 
+    /**
+     * @dev Returns the address of the current owner.
+     * for modify nft infomation on opensea/element/... marketplace
+     */
+    function owner() public view virtual returns (address) {
+        return _owner;
+    }
+
     /**************Only Call By Factory Function **********/
 
     function setTokenURI(
@@ -193,5 +205,36 @@ contract Tomoji is ERC404, Ownable {
             revert InvalidTokenId();
         }
         return string.concat(baseTokenURI, Strings.toString(id));
+    }
+
+    function _setV3SwapTransferExempt(
+        address v3NonfungiblePositionManagerAddress
+    ) internal {
+        address weth_ = INonfungiblePositionManager(
+            v3NonfungiblePositionManagerAddress
+        ).WETH9();
+        address swapFactory = INonfungiblePositionManager(
+            v3NonfungiblePositionManagerAddress
+        ).factory();
+
+        uint24[3] memory feeTiers = [
+            uint24(500),
+            uint24(3_000),
+            uint24(10_000)
+        ];
+
+        for (uint256 i = 0; i < feeTiers.length; ) {
+            address v3PairAddr = LibCaculatePair._getUniswapV3Pair(
+                swapFactory,
+                address(this),
+                weth_,
+                feeTiers[i]
+            );
+            // Set the v3 pair as exempt.
+            _erc721TransferExempt[v3PairAddr] = true;
+            unchecked {
+                ++i;
+            }
+        }
     }
 }

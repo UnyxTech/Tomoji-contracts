@@ -4,13 +4,11 @@ pragma solidity ^0.8.17;
 
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {INonfungiblePositionManager} from "./interfaces/INonfungiblePositionManager.sol";
-import {LibCaculatePair} from "./libraries/LibCaculatePair.sol";
 import {Math} from "./libraries/Math.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
 import {ITomoji} from "./interfaces/ITomoji.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {TransferHelper} from "./libraries/TransferHelper.sol";
-import "hardhat/console.sol";
 
 contract TomojiManager is ITomojiManager {
     error OnlyCallByFactory();
@@ -53,26 +51,17 @@ contract TomojiManager is ITomojiManager {
     }
 
     constructor(DataTypes.SwapRouter memory swapRouter, address factory) {
-        _swapRouter = swapRouter;
-        _factory = factory;
-    }
-
-    function prePairTomojiEnv(
-        address tomojiAddr,
-        uint256 mintPrice
-    ) public override onlyFactory returns (bool) {
-        address routerAddr = _swapRouter.routerAddr;
-        if (routerAddr == address(0)) {
+        address routerAddr = swapRouter.routerAddr;
+        address v3NonfungiblePositionManager = swapRouter
+            .uniswapV3NonfungiblePositionManager;
+        if (
+            routerAddr == address(0) ||
+            v3NonfungiblePositionManager == address(0)
+        ) {
             revert ZeroAddress();
         }
-
         address weth_ = INonfungiblePositionManager(routerAddr).WETH9();
         address swapFactory = INonfungiblePositionManager(routerAddr).factory();
-        address v3NonfungiblePositionManager = _swapRouter
-            .uniswapV3NonfungiblePositionManager;
-        if (v3NonfungiblePositionManager == address(0)) {
-            revert ZeroAddress();
-        }
         if (
             INonfungiblePositionManager(v3NonfungiblePositionManager)
                 .factory() !=
@@ -82,9 +71,20 @@ contract TomojiManager is ITomojiManager {
         ) {
             revert X404SwapV3FactoryMismatch();
         }
-        console.log("start _setV3SwapTransferExempt ");
-        _setV3SwapTransferExempt(tomojiAddr, swapFactory, tomojiAddr, weth_);
-        console.log("start _createUniswapV3Pool");
+
+        _swapRouter = swapRouter;
+        _factory = factory;
+    }
+
+    function prePairTomojiEnv(
+        address tomojiAddr,
+        uint256 mintPrice
+    ) public override onlyFactory returns (bool) {
+        address v3NonfungiblePositionManager = _swapRouter
+            .uniswapV3NonfungiblePositionManager;
+        address weth_ = INonfungiblePositionManager(
+            v3NonfungiblePositionManager
+        ).WETH9();
         _createUniswapV3Pool(
             v3NonfungiblePositionManager,
             tomojiAddr,
@@ -211,35 +211,6 @@ contract TomojiManager is ITomojiManager {
             _swapRouter.routerAddr,
             _swapRouter.uniswapV3NonfungiblePositionManager
         );
-    }
-
-    function _setV3SwapTransferExempt(
-        address tomojiAddr,
-        address swapFactory,
-        address token0,
-        address token1
-    ) internal {
-        uint24[3] memory feeTiers = [
-            uint24(500),
-            uint24(3_000),
-            uint24(10_000)
-        ];
-
-        address[] memory pairs = new address[](3);
-        for (uint256 i = 0; i < feeTiers.length; ) {
-            address v3PairAddr = LibCaculatePair._getUniswapV3Pair(
-                swapFactory,
-                token0,
-                token1,
-                feeTiers[i]
-            );
-            // Set the v3 pair as exempt.
-            pairs[i] = v3PairAddr;
-            unchecked {
-                ++i;
-            }
-        }
-        ITomoji(tomojiAddr).setERC721TransferExempt(pairs, true);
     }
 
     function _createUniswapV3Pool(

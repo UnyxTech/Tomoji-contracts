@@ -4,8 +4,8 @@ pragma solidity ^0.8.17;
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {Tomoji} from "./Tomoji.sol";
+import {ITomoji} from "./interfaces/ITomoji.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
-import "hardhat/console.sol";
 
 contract TomojiFactory is OwnableUpgradeable {
     error InvaildParam();
@@ -13,7 +13,9 @@ contract TomojiFactory is OwnableUpgradeable {
     error PrepairTomojiEnvFailed();
     error PreSaleDeadLineTooFar();
     error ContractAlreadyExist();
+    error ContractNotExist();
     error ZeroAddress();
+
     event ERC404Created(
         address indexed addr,
         address indexed creator,
@@ -93,14 +95,6 @@ contract TomojiFactory is OwnableUpgradeable {
                 }()
             );
             _erc404Contract[vars.creator][vars.name] = erc404;
-            console.log("erc404 addr: ", erc404);
-            bool ret = ITomojiManager(_tomojiManager).prePairTomojiEnv(
-                erc404,
-                vars.price
-            );
-            if (!ret) {
-                revert PrepairTomojiEnvFailed();
-            }
             delete _parameters;
         }
         emit ERC404Created(
@@ -116,6 +110,26 @@ contract TomojiFactory is OwnableUpgradeable {
             vars.baseURI,
             vars.contractURI
         );
+    }
+
+    function createUniswapV3PairForTomoji(
+        address creator,
+        string calldata name
+    ) public returns (bool) {
+        address erc404 = _erc404Contract[creator][name];
+        if (erc404 == address(0x0)) {
+            revert ContractNotExist();
+        }
+        uint256 price = ITomoji(erc404).mintPrice();
+
+        bool ret = ITomojiManager(_tomojiManager).prePairTomojiEnv(
+            erc404,
+            price
+        );
+        if (!ret) {
+            revert PrepairTomojiEnvFailed();
+        }
+        return true;
     }
 
     function setTokenURI(

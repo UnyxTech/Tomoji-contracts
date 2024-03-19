@@ -12,17 +12,16 @@ async function main() {
 
   const [deployer] = await hre.ethers.getSigners();
 
-  // const tomoji = "0xfcf715696dadf8a101972e0e7d780c1d4f07e701"
-  // const tomojiContract = Tomoji__factory.connect(tomoji)
-  // const managerAddr = await tomojiContract.connect(deployer)._tomojiManager();
-
   const tomorrow = parseInt((new Date().getTime() / 1000 ).toFixed(0)) + 24 * 3600
-  const proxyAddr = "0xE9D13b327463f0c185e1B824289f4Ee81CE5207f"
+  const proxyAddr = "0x89f1a1C6f019f70dc14F5E72C0c43f4Ce5193C51"
+  // const tomojiFactory = TomojiFactory__factory.connect(proxyAddr)
+  // const tomojiManagerAddr = await tomojiFactory.connect(deployer)._erc404Contract(deployer.address, "MoMonkey");
+  // console.log("tomoji addr: ", tomojiManagerAddr)
 
-  const manager = "0x4759dF150377Ec4a4B6f3BD6a77Ec474931AF27b"
+  const manager = "0x526f32EED97342d4c6960d26d5326EB82871E210"
   const tomojiManager = TomojiManager__factory.connect(manager)
   const factory = await tomojiManager.connect(deployer)._factory();
-  console.log("factory: ", factory)
+  console.log("proxyAddress: ", factory)
 
   const tomojiFactory = TomojiFactory__factory.connect(proxyAddr)
   const tomojiManagerAddr = await tomojiFactory.connect(deployer)._tomojiManager();

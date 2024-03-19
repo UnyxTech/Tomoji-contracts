@@ -24,7 +24,7 @@ async function main() {
 
   const tomojiManager = await new TomojiManager__factory(deployer).deploy(swapRouter, proxyTomojiAddress);
   const tomojiManagerAddr = await tomojiManager.getAddress()
-  console.log("tomoji address: ", tomojiManagerAddr)
+  console.log("tomojiManager address: ", tomojiManagerAddr)
   await delay(10000);
 
   const TomojiFactory = await ethers.getContractFactory("TomojiFactory");
