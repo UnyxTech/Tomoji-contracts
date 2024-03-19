@@ -1,6 +1,6 @@
 /* Imports: Internal */
 import { DeployFunction } from 'hardhat-deploy/dist/types'
-import { hexlify, keccak256} from 'ethers';
+import { hexlify, keccak256, toBeHex} from 'ethers';
 import { ethers } from 'hardhat';
 import { encode } from '@ethersproject/rlp'
 import { deployAndVerifyAndThen } from '../scripts/deploy-utils';
@@ -10,7 +10,7 @@ const deployFn: DeployFunction = async (hre) => {
   const { deployer, owner } = await hre.getNamedAccounts()
 
   let deployerNonce = await ethers.provider.getTransactionCount(deployer);
-  const proxyTomojiFactoryNonce = hexlify((deployerNonce + 2).toString());
+  const proxyTomojiFactoryNonce = hexlify(toBeHex((deployerNonce + 2).toString()));
   const proxyTomojiAddress = '0x' + keccak256(encode([deployer, proxyTomojiFactoryNonce])).substring(26);
   
   let swapRouter;

@@ -1,19 +1,13 @@
 /* Imports: Internal */
 import { DeployFunction } from 'hardhat-deploy/dist/types'
 
-import { ZeroAddress } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
-import { getContractFromArtifact } from '../scripts/deploy-utils';
 
 const deployFn: DeployFunction = async (hre) => {
   
   const { deployer } = await hre.getNamedAccounts()
 
-  const TomojiManager = await getContractFromArtifact(
-    hre,
-    "TomojiManager"
-  )
-  const tomojiManagerAddr = await TomojiManager.getAddress()
+  const tomojiManagerAddr = "0xAFbf4D25b5F4d65eE1D09aE0FB9748296f8C5946"
 
   const TomojiFactory = await ethers.getContractFactory("TomojiFactory");
   const proxy = await upgrades.deployProxy(TomojiFactory, [deployer, tomojiManagerAddr]);
@@ -26,6 +20,6 @@ const deployFn: DeployFunction = async (hre) => {
 }
 
 // This is kept during an upgrade. So no upgrade tag.
-deployFn.tags = ['TomojiFactory']
+deployFn.tags = ['DeployTomojiFactory']
 
 export default deployFn

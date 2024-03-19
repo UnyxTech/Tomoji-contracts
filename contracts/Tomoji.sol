@@ -107,11 +107,12 @@ contract Tomoji is ERC404, Ownable {
         if (mintAmount_ == 0 || msg.value < price) {
             revert InvaildParam();
         }
-        if (mintAccount[msg.sender] + mintAmount_ > maxPerWallet) {
-            revert ReachMaxPerMint();
+        if (msg.sender != creator) {
+            if (mintAccount[msg.sender] + mintAmount_ > maxPerWallet) {
+                revert ReachMaxPerMint();
+            }
+            mintAccount[msg.sender] += mintAmount_;
         }
-
-        mintAccount[msg.sender] += mintAmount_;
         preSaleAmountLeft -= mintAmount_;
 
         uint256 buyAmount = mintAmount_ * units;

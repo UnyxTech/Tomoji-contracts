@@ -30,10 +30,12 @@ contract TomojiFactory is OwnableUpgradeable {
     mapping(address => mapping(string => address)) public _erc404Contract;
     DataTypes.CreateERC404Parameters public _parameters;
     address public _tomojiManager;
-    uint256 public maxReservePercentage; //defaule 1000 as 10%
-    uint256 public maxPreSaleTime; //defaule 7 days
-    address public protocolFeeAddress;
-    uint256 public protocolPercentage;
+    uint256 public _maxReservePercentage; //defaule 1000 as 10%
+    uint256 public _maxPreSaleTime; //defaule 7 days
+    address public _protocolFeeAddress;
+    uint256 public _protocolPercentage;
+    address public _daoContractAddr;
+    bool public _bSupportReserved;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -47,9 +49,11 @@ contract TomojiFactory is OwnableUpgradeable {
         __Ownable_init(owner);
 
         _tomojiManager = tomojiManager;
-        maxReservePercentage = 1000;
-        maxPreSaleTime = 7 * 24 * 60 * 60;
-        protocolFeeAddress = owner;
+        _maxReservePercentage = 5000;
+        _maxPreSaleTime = 7 * 24 * 60 * 60;
+        _protocolFeeAddress = owner;
+        _bSupportReserved = false;
+        _daoContractAddr = owner;
     }
 
     function createERC404(
@@ -60,12 +64,13 @@ contract TomojiFactory is OwnableUpgradeable {
                 revert InvaildParam();
             }
             if (
+                _bSupportReserved &&
                 vars.reserved >
-                (vars.nftTotalSupply * maxReservePercentage) / 10000
+                (vars.nftTotalSupply * _maxReservePercentage) / 10000
             ) {
                 revert ReservedTooMuch();
             }
-            if (vars.preSaleDeadLine > block.timestamp + maxPreSaleTime) {
+            if (vars.preSaleDeadLine > block.timestamp + _maxPreSaleTime) {
                 revert PreSaleDeadLineTooFar();
             }
             if (_erc404Contract[vars.creator][vars.name] != address(0x0)) {
@@ -73,6 +78,9 @@ contract TomojiFactory is OwnableUpgradeable {
             }
 
             _parameters = vars;
+            if (!_bSupportReserved) {
+                _parameters.reserved = 0;
+            }
             erc404 = address(
                 new Tomoji{
                     salt: keccak256(
@@ -139,24 +147,35 @@ contract TomojiFactory is OwnableUpgradeable {
         if (newReservePercentage > 5000) {
             revert ReservedTooMuch();
         }
-        maxReservePercentage = newReservePercentage;
+        _maxReservePercentage = newReservePercentage;
     }
 
     function setMaxPreSaleTime(uint256 newMaxPreSaleTime) public onlyOwner {
-        maxPreSaleTime = newMaxPreSaleTime;
+        _maxPreSaleTime = newMaxPreSaleTime;
     }
 
     function setProtocolFeeAddress(address newAddress) public onlyOwner {
         if (newAddress == address(0)) {
             revert ZeroAddress();
         }
-        protocolFeeAddress = newAddress;
+        _protocolFeeAddress = newAddress;
     }
 
     function setProtocolFeePercentage(uint256 newPercentage) public onlyOwner {
         if (newPercentage > 10000) {
             revert InvaildParam();
         }
-        protocolPercentage = newPercentage;
+        _protocolPercentage = newPercentage;
+    }
+
+    function setSupportReserved(bool bSupportReserved) public onlyOwner {
+        _bSupportReserved = bSupportReserved;
+    }
+
+    function setDaoContractAddr(address newAddr) public onlyOwner {
+        if (newAddr == address(0)) {
+            revert ZeroAddress();
+        }
+        _daoContractAddr = newAddr;
     }
 }

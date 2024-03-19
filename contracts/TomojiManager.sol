@@ -17,11 +17,32 @@ contract TomojiManager is ITomojiManager {
     error ZeroAddress();
     error X404SwapV3FactoryMismatch();
     error CreatePairFailed();
-    error NotExistTokenId();
+    error JustCanBeCallByDaoAddress();
+
+    event RemoveLiquidityForEmergece(
+        uint256 tokenId,
+        uint256 liquidity,
+        uint256 amount0,
+        uint256 amount1
+    );
+
+    event CollectLiquidityReward(
+        address tomojiAddr,
+        uint256 tokenId,
+        uint256 amount0,
+        uint256 amount1
+    );
+
+    event AddLiquidityAfterSoldOut(
+        address tomojiAddr,
+        uint256 tokenId,
+        uint128 liquidity,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     DataTypes.SwapRouter public _swapRouter;
     address public _factory;
-    mapping(address => uint) private _positionTokenId;
 
     modifier onlyFactory() {
         if (msg.sender != _factory) {
@@ -38,7 +59,7 @@ contract TomojiManager is ITomojiManager {
     function prePairTomojiEnv(
         address tomojiAddr,
         uint256 mintPrice
-    ) public onlyFactory returns (bool) {
+    ) public override onlyFactory returns (bool) {
         address routerAddr = _swapRouter.routerAddr;
         if (routerAddr == address(0)) {
             revert ZeroAddress();
@@ -73,36 +94,15 @@ contract TomojiManager is ITomojiManager {
     function addLiquidityForTomoji(
         address tomojiAddr,
         uint256 tokenAmount
-    ) public payable returns (bool) {
+    ) public payable override returns (bool) {
         address v3NonfungiblePositionManagerAddress = _swapRouter
             .uniswapV3NonfungiblePositionManager;
-        address _weth = INonfungiblePositionManager(
-            v3NonfungiblePositionManagerAddress
-        ).WETH9();
-        (address token0, address token1, bool zeroForOne) = tomojiAddr < _weth
-            ? (tomojiAddr, _weth, true)
-            : (_weth, tomojiAddr, false);
 
-        uint256 ethValue = address(this).balance;
-        (uint256 tokenId_, , , ) = INonfungiblePositionManager(
-            v3NonfungiblePositionManagerAddress
-        ).mint{value: ethValue}(
-            INonfungiblePositionManager.MintParams({
-                token0: token0,
-                token1: token1,
-                fee: uint24(10_000),
-                tickLower: int24(-887272),
-                tickUpper: int24(887272),
-                amount0Desired: zeroForOne ? tokenAmount : ethValue,
-                amount1Desired: zeroForOne ? ethValue : tokenAmount,
-                amount0Min: 0,
-                amount1Min: 0,
-                recipient: address(this),
-                deadline: block.timestamp
-            })
+        _mintLiquidity(
+            tomojiAddr,
+            v3NonfungiblePositionManagerAddress,
+            tokenAmount
         );
-        _positionTokenId[tomojiAddr] = tokenId_;
-
         uint256 leftToken = ITomoji(tomojiAddr).balanceOf(tomojiAddr);
         address creator = ITomoji(tomojiAddr).creator();
         if (leftToken > 0) {
@@ -128,12 +128,9 @@ contract TomojiManager is ITomojiManager {
 
     //collect liqiudity reward
     function collect(
-        address tomojiAddr
+        address tomojiAddr,
+        uint256 tokenId
     ) public returns (uint256 amount0, uint256 amount1) {
-        uint256 tokenId = _positionTokenId[tomojiAddr];
-        if (tokenId == 0) {
-            revert NotExistTokenId();
-        }
         address v3NonfungiblePositionManagerAddress = _swapRouter
             .uniswapV3NonfungiblePositionManager;
         (amount0, amount1) = INonfungiblePositionManager(
@@ -146,8 +143,8 @@ contract TomojiManager is ITomojiManager {
                     amount1Max: type(uint128).max
                 })
             );
-        address feeAddr = ITomojiFactory(_factory).protocolFeeAddress();
-        uint256 feePercentage = ITomojiFactory(_factory).protocolPercentage();
+        address feeAddr = ITomojiFactory(_factory)._protocolFeeAddress();
+        uint256 feePercentage = ITomojiFactory(_factory)._protocolPercentage();
         uint256 tokenReward = ITomoji(tomojiAddr).balanceOf(address(this));
         uint256 ethReward = address(this).balance;
         address creator = ITomoji(tomojiAddr).creator();
@@ -170,6 +167,40 @@ contract TomojiManager is ITomojiManager {
                 revert SendETHFailed();
             }
         }
+        emit CollectLiquidityReward(tomojiAddr, tokenId, amount0, amount1);
+    }
+
+    /// remove liquidity for emergece, just call by DAO
+    function removeLiquidityForEmergece(
+        uint256 tokenId,
+        uint128 liquidity
+    ) external payable override returns (bool) {
+        address daoAddr = ITomojiFactory(_factory)._daoContractAddr();
+        if (msg.sender != daoAddr) {
+            revert JustCanBeCallByDaoAddress();
+        }
+        address v3NonfungiblePositionManagerAddress = _swapRouter
+            .uniswapV3NonfungiblePositionManager;
+        (uint256 amount0, uint256 amount1) = INonfungiblePositionManager(
+            v3NonfungiblePositionManagerAddress
+        ).decreaseLiquidity(
+                INonfungiblePositionManager.DecreaseLiquidityParams({
+                    tokenId: tokenId,
+                    liquidity: liquidity,
+                    amount0Min: 0,
+                    amount1Min: 0,
+                    deadline: block.timestamp
+                })
+            );
+        emit RemoveLiquidityForEmergece(tokenId, liquidity, amount0, amount1);
+        return true;
+    }
+
+    function setFactory(address factory) public {
+        if (factory == address(0)) {
+            revert ZeroAddress();
+        }
+        _factory = factory;
     }
 
     function getSwapRouter() public view returns (address, address) {
@@ -233,6 +264,51 @@ contract TomojiManager is ITomojiManager {
             );
         if (pool == address(0)) {
             revert CreatePairFailed();
+        }
+    }
+
+    function _mintLiquidity(
+        address tomojiAddr,
+        address v3NonfungiblePositionManagerAddress,
+        uint256 tokenAmount
+    ) internal {
+        address _weth = INonfungiblePositionManager(
+            v3NonfungiblePositionManagerAddress
+        ).WETH9();
+        (address token0, address token1, bool zeroForOne) = tomojiAddr < _weth
+            ? (tomojiAddr, _weth, true)
+            : (_weth, tomojiAddr, false);
+        uint256 ethValue = address(this).balance;
+        {
+            (
+                uint256 tokenId,
+                uint128 liquidity,
+                uint256 amount0,
+                uint256 amount1
+            ) = INonfungiblePositionManager(v3NonfungiblePositionManagerAddress)
+                    .mint{value: ethValue}(
+                    INonfungiblePositionManager.MintParams({
+                        token0: token0,
+                        token1: token1,
+                        fee: uint24(10_000),
+                        tickLower: int24(-887272),
+                        tickUpper: int24(887272),
+                        amount0Desired: zeroForOne ? tokenAmount : ethValue,
+                        amount1Desired: zeroForOne ? ethValue : tokenAmount,
+                        amount0Min: 0,
+                        amount1Min: 0,
+                        recipient: address(this),
+                        deadline: block.timestamp
+                    })
+                );
+
+            emit AddLiquidityAfterSoldOut(
+                tomojiAddr,
+                tokenId,
+                liquidity,
+                amount0,
+                amount1
+            );
         }
     }
 }

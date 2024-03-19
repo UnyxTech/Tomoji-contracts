@@ -14,6 +14,7 @@ makeSuiteCleanRoom('create ERC404', function () {
     context('Generic', function () {
         context('Negatives', function () {
             it('User should fail to create if reserved large than supply.',   async function () {
+                await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
                 await expect(tomojiFactory.connect(owner).createERC404({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
@@ -58,6 +59,7 @@ makeSuiteCleanRoom('create ERC404', function () {
 
         context('Scenarios', function () {
             it('Create tomo emoji collection if pass correct param.',   async function () {
+                await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
                 await expect(tomojiFactory.connect(owner).createERC404({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
@@ -72,6 +74,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                 })).to.not.be.reverted;
             })
             it('Get correct variable tomo emoji collection if pass correct param.',   async function () {
+                await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
                 let tomoErc404Address: string
                 let nftTotalSupply = 10000
                 let reserved0 = 0

@@ -14,4 +14,9 @@ interface ITomojiManager {
         address tomojiAddr,
         uint256 tokenAmount
     ) external payable returns (bool);
+
+    function removeLiquidityForEmergece(
+        uint256 tokenId,
+        uint128 liquidity
+    ) external payable returns (bool);
 }
