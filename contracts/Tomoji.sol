@@ -25,14 +25,14 @@ contract Tomoji is ERC404, Ownable {
     uint256 private preSaleDeadLine;
     uint256 private preSaleAmountLeft;
 
-    address private _tomojiManager;
+    address public _tomojiManager;
 
     mapping(address => uint) private mintAccount;
     address public immutable creator;
     address public immutable factory;
 
     modifier onlyFactoryOrManager() {
-        if (msg.sender != factory || msg.sender != _tomojiManager) {
+        if (msg.sender != factory && msg.sender != _tomojiManager) {
             revert OnlyCallByFactoryOrManager();
         }
         _;

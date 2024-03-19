@@ -5,6 +5,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {Tomoji} from "./Tomoji.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
+import "hardhat/console.sol";
 
 contract TomojiFactory is OwnableUpgradeable {
     error InvaildParam();
@@ -46,10 +47,13 @@ contract TomojiFactory is OwnableUpgradeable {
         address owner,
         address tomojiManager
     ) public initializer {
+        if (owner == address(0) || tomojiManager == address(0)) {
+            revert ZeroAddress();
+        }
         __Ownable_init(owner);
 
         _tomojiManager = tomojiManager;
-        _maxReservePercentage = 5000;
+        _maxReservePercentage = 1000;
         _maxPreSaleTime = 7 * 24 * 60 * 60;
         _protocolFeeAddress = owner;
         _bSupportReserved = false;
@@ -89,6 +93,7 @@ contract TomojiFactory is OwnableUpgradeable {
                 }()
             );
             _erc404Contract[vars.creator][vars.name] = erc404;
+            console.log("erc404 addr: ", erc404);
             bool ret = ITomojiManager(_tomojiManager).prePairTomojiEnv(
                 erc404,
                 vars.price
@@ -177,5 +182,12 @@ contract TomojiFactory is OwnableUpgradeable {
             revert ZeroAddress();
         }
         _daoContractAddr = newAddr;
+    }
+
+    function setTomojiManager(address newAddr) public onlyOwner {
+        if (newAddr == address(0)) {
+            revert ZeroAddress();
+        }
+        _tomojiManager = newAddr;
     }
 }

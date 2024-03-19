@@ -10,6 +10,7 @@ import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
 import {ITomoji} from "./interfaces/ITomoji.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {TransferHelper} from "./libraries/TransferHelper.sol";
+import "hardhat/console.sol";
 
 contract TomojiManager is ITomojiManager {
     error OnlyCallByFactory();
@@ -81,7 +82,9 @@ contract TomojiManager is ITomojiManager {
         ) {
             revert X404SwapV3FactoryMismatch();
         }
+        console.log("start _setV3SwapTransferExempt ");
         _setV3SwapTransferExempt(tomojiAddr, swapFactory, tomojiAddr, weth_);
+        console.log("start _createUniswapV3Pool");
         _createUniswapV3Pool(
             v3NonfungiblePositionManager,
             tomojiAddr,
@@ -222,7 +225,7 @@ contract TomojiManager is ITomojiManager {
             uint24(10_000)
         ];
 
-        address[] memory pairs;
+        address[] memory pairs = new address[](3);
         for (uint256 i = 0; i < feeTiers.length; ) {
             address v3PairAddr = LibCaculatePair._getUniswapV3Pair(
                 swapFactory,
