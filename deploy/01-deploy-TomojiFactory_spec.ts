@@ -7,7 +7,7 @@ const deployFn: DeployFunction = async (hre) => {
   
   const { deployer } = await hre.getNamedAccounts()
 
-  const tomojiManagerAddr = "0xB217Aff781aF7A509C6Ea2026F93EDc68A050Adb"
+  const tomojiManagerAddr = "0x3AA27B782f8868fD02DBba58107318322a45e1Bd"
 
   const TomojiFactory = await ethers.getContractFactory("TomojiFactory");
   const proxy = await upgrades.deployProxy(TomojiFactory, [deployer, tomojiManagerAddr]);

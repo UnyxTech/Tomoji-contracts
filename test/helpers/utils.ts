@@ -11,7 +11,6 @@ export function getChainId(): number {
 
 export function computeContractAddress(deployerAddress: string, nonce: number): string {
   const hexNonce = hexlify(toBeHex(nonce.toString()));
-  console.log("hexNonce: ", hexNonce)
   return '0x' + keccak256(encode([deployerAddress, hexNonce])).substring(26);
 }
 

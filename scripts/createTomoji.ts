@@ -33,6 +33,8 @@ async function main() {
     maxPerWallet: 3,
     price: 10000,
     preSaleDeadLine: tomorrow,
+    sqrtPriceX96: 11,
+    sqrtPriceB96: 11,
     name: "MoMonkey", 
     symbol: "MoMk", 
     baseURI: "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/", 

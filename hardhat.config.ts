@@ -32,9 +32,9 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       gas: 29000000,
-      forking: {
-        url: process.env.SEPOLIA_RPC_URL || '',
-      }
+      // forking: {
+      //   url: process.env.SEPOLIA_RPC_URL || '',
+      // }
     },
     bsc: {
       chainId: 56,

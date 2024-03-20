@@ -51,7 +51,7 @@ contract TomojiClaim is Ownable {
         if (emojiTokenAmount == 0 || merkleRoot == bytes32(0)) {
             revert InvaildParam();
         }
-        address erc404Addr = ITomojiFactory(_tomojiFactory).erc404Contract(
+        address erc404Addr = ITomojiFactory(_tomojiFactory)._erc404Contract(
             msg.sender,
             name
         );

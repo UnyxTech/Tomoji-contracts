@@ -6,7 +6,6 @@ import {DataTypes} from "./libraries/DataTypes.sol";
 import {Tomoji} from "./Tomoji.sol";
 import {ITomoji} from "./interfaces/ITomoji.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
-import "hardhat/console.sol";
 
 contract TomojiFactory is OwnableUpgradeable {
     error InvaildParam();
@@ -17,7 +16,7 @@ contract TomojiFactory is OwnableUpgradeable {
     error ContractNotExist();
     error ZeroAddress();
 
-    event ERC404Created(
+    event TomojiCreated(
         address indexed addr,
         address indexed creator,
         uint256 totalSupply,
@@ -32,7 +31,7 @@ contract TomojiFactory is OwnableUpgradeable {
     );
 
     mapping(address => mapping(string => address)) public _erc404Contract;
-    DataTypes.CreateERC404Parameters public _parameters;
+    DataTypes.CreateTomojiParameters private _parameters;
     address public _tomojiManager;
     uint256 public _maxReservePercentage; //defaule 1000 as 10%
     uint256 public _maxPreSaleTime; //defaule 7 days
@@ -64,7 +63,7 @@ contract TomojiFactory is OwnableUpgradeable {
     }
 
     function createERC404(
-        DataTypes.CreateERC404Parameters calldata vars
+        DataTypes.CreateTomojiParameters calldata vars
     ) external returns (address erc404) {
         {
             if (msg.sender != vars.creator) {
@@ -96,15 +95,14 @@ contract TomojiFactory is OwnableUpgradeable {
                 }()
             );
             _erc404Contract[vars.creator][vars.name] = erc404;
-            console.log("erc404: ", erc404);
-            address pool = ITomojiManager(_tomojiManager).prePairTomojiEnv(
+            ITomojiManager(_tomojiManager).prePairTomojiEnv(
                 erc404,
-                vars.price
+                vars.sqrtPriceX96,
+                vars.sqrtPriceB96
             );
-            console.log("pool: ", pool);
             delete _parameters;
         }
-        emit ERC404Created(
+        emit TomojiCreated(
             erc404,
             vars.creator,
             vars.nftTotalSupply,
@@ -118,26 +116,6 @@ contract TomojiFactory is OwnableUpgradeable {
             vars.contractURI
         );
     }
-
-    // function createUniswapV3PairForTomoji(
-    //     address creator,
-    //     string calldata name
-    // ) public returns (bool) {
-    //     address erc404 = _erc404Contract[creator][name];
-    //     if (erc404 == address(0x0)) {
-    //         revert ContractNotExist();
-    //     }
-    //     uint256 price = ITomoji(erc404).mintPrice();
-
-    //     bool ret = ITomojiManager(_tomojiManager).prePairTomojiEnv(
-    //         erc404,
-    //         price
-    //     );
-    //     if (!ret) {
-    //         revert PrepairTomojiEnvFailed();
-    //     }
-    //     return true;
-    // }
 
     function setTokenURI(
         address creator,
@@ -210,5 +188,13 @@ contract TomojiFactory is OwnableUpgradeable {
             revert ZeroAddress();
         }
         _tomojiManager = newAddr;
+    }
+
+    function parameters()
+        external
+        view
+        returns (DataTypes.CreateTomojiParameters memory)
+    {
+        return _parameters;
     }
 }

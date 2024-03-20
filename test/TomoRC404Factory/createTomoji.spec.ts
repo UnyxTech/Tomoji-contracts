@@ -4,13 +4,30 @@ import {
 } from '../__setup.spec';
 import { expect } from 'chai';
 import { ERRORS } from '../helpers/errors';
-import { waitForTx } from '../helpers/utils';
 import { Tomoji__factory } from '../../typechain-types';
 import { ethers } from 'hardhat';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
+
+import bn from 'bignumber.js'
+bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 })
+// returns the sqrt price as a 64x96
+function encodePriceSqrt(reserve1: BigNumberish, reserve0: BigNumberish): BigNumber {
+  return BigNumber.from(
+    new bn(reserve1.toString())
+      .div(reserve0.toString())
+      .sqrt()
+      .multipliedBy(new bn(2).pow(96))
+      .integerValue(3)
+      .toString()
+  )
+}
 
 const tomorrow = parseInt((new Date().getTime() / 1000 ).toFixed(0)) + 24 * 3600
 
 makeSuiteCleanRoom('create ERC404', function () {
+    const mintPrice = ethers.parseEther("0.01");
+    const sqrtPriceX96 = encodePriceSqrt(ethers.parseEther("0.01"), ethers.parseEther("1"));
+    const sqrtPriceB96 = encodePriceSqrt(ethers.parseEther("1"), ethers.parseEther("0.01"));
     context('Generic', function () {
         context('Negatives', function () {
             it('User should fail to create if reserved large than supply.',   async function () {
@@ -20,8 +37,10 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 10001,
                     maxPerWallet: 100,
-                    price: 10000,
+                    price: mintPrice,
                     preSaleDeadLine: tomorrow,
+                    sqrtPriceX96: sqrtPriceX96.toBigInt(),
+                    sqrtPriceB96: sqrtPriceB96.toBigInt(),
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -35,8 +54,10 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 0,
                     maxPerWallet: 100,
-                    price: 10000,
+                    price: mintPrice,
                     preSaleDeadLine: tomorrow,
+                    sqrtPriceX96: sqrtPriceX96.toBigInt(),
+                    sqrtPriceB96: sqrtPriceB96.toBigInt(),
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -47,8 +68,10 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 0,
                     maxPerWallet: 100,
-                    price: 10000,
+                    price: mintPrice,
                     preSaleDeadLine: tomorrow,
+                    sqrtPriceX96: sqrtPriceX96.toBigInt(),
+                    sqrtPriceB96: sqrtPriceB96.toBigInt(),
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -65,8 +88,10 @@ makeSuiteCleanRoom('create ERC404', function () {
                     nftTotalSupply: 10000,
                     reserved: 100,
                     maxPerWallet: 100,
-                    price: 10000,
+                    price: mintPrice,
                     preSaleDeadLine: tomorrow,
+                    sqrtPriceX96: sqrtPriceX96.toBigInt(),
+                    sqrtPriceB96: sqrtPriceB96.toBigInt(),
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -81,7 +106,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                 let reserved1 = 1000
                 let maxPerWallet = 200
                 let price0 = 0
-                let price1 = 10000
+                let price1 = mintPrice
                 let name = "Tomo-emoji"
                 let symbol = "Tomo-emoji"
                 let baseUri = "https://tomo-baseuri/"
@@ -92,8 +117,10 @@ makeSuiteCleanRoom('create ERC404', function () {
                         nftTotalSupply: nftTotalSupply,
                         reserved: reserved1,
                         maxPerWallet: maxPerWallet,
-                        price: price1,
+                        price: mintPrice,
                         preSaleDeadLine: tomorrow,
+                        sqrtPriceX96: sqrtPriceX96.toBigInt(),
+                        sqrtPriceB96: sqrtPriceB96.toBigInt(),
                         name: name, 
                         symbol: symbol, 
                         baseURI: baseUri, 

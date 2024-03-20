@@ -1,6 +1,6 @@
 
 import { expect } from 'chai';
-import { Signer, Wallet } from 'ethers';
+import { Signer } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
 import {
   Tomoji,
@@ -27,11 +27,6 @@ export let userTwoAddress: string;
 export let tomojiFactory: TomojiFactory;
 export let tomojiManager: TomojiManager;
 
-export let signWallet: Wallet;
-
-export const BRC404Factory_NAME = 'Tomo-ticker';
-export const ticker: string = 'Tomo';
-export const symbol: string = "Tomo";
 export const decimals = 18;
 
 export function makeSuiteCleanRoom(name: string, tests: () => void) {

@@ -7,6 +7,7 @@
     "@openzeppelin/hardhat-upgrades": "^3.0.4",
     "dotenv": "^16.3.1",
     "hardhat": "^2.20.1",
-    "hardhat-deploy": "^0.11.45"
+    "hardhat-deploy": "^0.11.45",
+    "bignumber.js": "^9.1.2"
   }
 }

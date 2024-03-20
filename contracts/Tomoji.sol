@@ -7,6 +7,7 @@ import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
 import {INonfungiblePositionManager} from "./interfaces/INonfungiblePositionManager.sol";
 import {Strings} from "./libraries/Strings.sol";
+import {DataTypes} from "./libraries/DataTypes.sol";
 import {LibCaculatePair} from "./libraries/LibCaculatePair.sol";
 
 contract Tomoji is ERC404 {
@@ -23,14 +24,13 @@ contract Tomoji is ERC404 {
     address public _tomojiManager;
     uint256 public mintPrice;
     string public contractURI;
+    uint256 public maxPerWallet;
+    uint256 public preSaleDeadLine;
+    uint256 public preSaleAmountLeft;
+    address private creator;
     string private baseTokenURI;
-    uint256 private maxPerWallet;
-    uint256 private preSaleDeadLine;
-    uint256 private preSaleAmountLeft;
-    address private _owner;
 
     mapping(address => uint) private mintAccount;
-    address public immutable creator;
     address public immutable factory;
 
     modifier onlyFactoryOrManager() {
@@ -40,26 +40,40 @@ contract Tomoji is ERC404 {
         _;
     }
 
-    constructor() {
-        uint256 nftSupply;
-        uint256 reserved;
-        decimals = 18;
-        (
-            creator,
-            nftSupply,
-            reserved,
-            maxPerWallet,
-            mintPrice,
-            preSaleDeadLine,
-            name,
-            symbol,
-            baseTokenURI,
-            contractURI
-        ) = ITomojiFactory(msg.sender)._parameters();
-        units = 10 ** decimals;
+    function initialized(
+        DataTypes.CreateTomojiParameters memory vars
+    ) internal {
+        creator = vars.creator;
+        mintPrice = vars.price;
+        contractURI = vars.contractURI;
+        baseTokenURI = vars.baseURI;
+        maxPerWallet = vars.maxPerWallet;
+        preSaleDeadLine = vars.preSaleDeadLine;
+        name = vars.name;
+        symbol = vars.symbol;
 
         _erc721TransferExempt[creator] = true;
         _erc721TransferExempt[address(this)] = true;
+
+        if (vars.reserved > 0) {
+            _mintERC20(creator, vars.reserved * units);
+        }
+        _mintERC20(
+            address(this),
+            (vars.nftTotalSupply - vars.reserved) * units
+        );
+        preSaleAmountLeft = (vars.nftTotalSupply - vars.reserved) / 2;
+    }
+
+    constructor() {
+        decimals = 18;
+        units = 10 ** decimals;
+        factory = msg.sender;
+
+        DataTypes.CreateTomojiParameters memory vars = ITomojiFactory(
+            msg.sender
+        ).parameters();
+        initialized(vars);
         _tomojiManager = ITomojiFactory(msg.sender)._tomojiManager();
         (
             address router,
@@ -68,20 +82,10 @@ contract Tomoji is ERC404 {
         _erc721TransferExempt[router] = true;
         _erc721TransferExempt[v3NonfungiblePositionManagerAddress] = true;
         _setV3SwapTransferExempt(v3NonfungiblePositionManagerAddress);
-
         allowance[address(this)][v3NonfungiblePositionManagerAddress] = type(
             uint256
         ).max;
         allowance[address(this)][_tomojiManager] = type(uint256).max;
-
-        if (reserved > 0) {
-            _mintERC20(creator, reserved * units);
-        }
-        _mintERC20(address(this), (nftSupply - reserved) * units);
-        preSaleAmountLeft = (nftSupply - reserved) / 2;
-
-        factory = msg.sender;
-        _owner = creator;
     }
 
     function multiTransfer(
@@ -173,11 +177,11 @@ contract Tomoji is ERC404 {
     }
 
     /**
-     * @dev Returns the address of the current owner.
+     * @dev Returns the address of the tomoji creator.
      * for modify nft infomation on opensea/element/... marketplace
      */
     function owner() public view virtual returns (address) {
-        return _owner;
+        return creator;
     }
 
     /**************Only Call By Factory Function **********/

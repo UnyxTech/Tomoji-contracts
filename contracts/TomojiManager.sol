@@ -40,7 +40,7 @@ contract TomojiManager is ITomojiManager {
         uint256 amount1
     );
 
-    DataTypes.SwapRouter public _swapRouter;
+    DataTypes.SwapRouter private _swapRouter;
     address public _factory;
 
     modifier onlyFactory() {
@@ -78,7 +78,8 @@ contract TomojiManager is ITomojiManager {
 
     function prePairTomojiEnv(
         address tomojiAddr,
-        uint256 mintPrice
+        uint160 sqrtPriceX96,
+        uint160 sqrtPriceB96
     ) public override onlyFactory returns (address) {
         address v3NonfungiblePositionManager = _swapRouter
             .uniswapV3NonfungiblePositionManager;
@@ -89,7 +90,8 @@ contract TomojiManager is ITomojiManager {
             v3NonfungiblePositionManager,
             tomojiAddr,
             weth_,
-            mintPrice
+            sqrtPriceX96,
+            sqrtPriceB96
         );
         return pool;
     }
@@ -217,24 +219,19 @@ contract TomojiManager is ITomojiManager {
         address v3NonfungiblePositionManager,
         address tokenA,
         address tokenB,
-        uint256 mintPrice
+        uint160 sqrtPriceX96,
+        uint160 sqrtPriceB96
     ) internal returns (address) {
         (address token0, address token1, bool zeroForOne) = tokenA < tokenB
             ? (tokenA, tokenB, true)
             : (tokenB, tokenA, false);
 
-        uint160 sqrtPriceX96;
-        if (zeroForOne) {
-            sqrtPriceX96 = uint160(Math.sqrt(mintPrice) * (2 ** 96));
-        } else {
-            sqrtPriceX96 = uint160(Math.sqrt(10 ** 36 / mintPrice) * (2 ** 96));
-        }
         address pool = INonfungiblePositionManager(v3NonfungiblePositionManager)
             .createAndInitializePoolIfNecessary(
                 token0,
                 token1,
                 uint24(10_000),
-                sqrtPriceX96
+                zeroForOne ? sqrtPriceX96 : sqrtPriceB96
             );
         if (pool == address(0)) {
             revert CreatePairFailed();
