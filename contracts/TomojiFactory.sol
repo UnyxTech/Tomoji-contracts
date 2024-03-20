@@ -36,7 +36,7 @@ contract TomojiFactory is OwnableUpgradeable {
     uint256 public _maxReservePercentage; //defaule 1000 as 10%
     uint256 public _maxPreSaleTime; //defaule 7 days
     address public _protocolFeeAddress;
-    uint256 public _protocolPercentage;
+    uint256 public _protocolPercentage; //default 50% of liquidity reward
     address public _daoContractAddr;
     bool public _bSupportReserved;
 
@@ -57,6 +57,7 @@ contract TomojiFactory is OwnableUpgradeable {
         _tomojiManager = tomojiManager;
         _maxReservePercentage = 1000;
         _maxPreSaleTime = 7 * 24 * 60 * 60;
+        _protocolPercentage = 5000;
         _protocolFeeAddress = owner;
         _bSupportReserved = false;
         _daoContractAddr = owner;

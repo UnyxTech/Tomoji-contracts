@@ -9,7 +9,7 @@ interface ITomoji {
 
     function balanceOf(address owner_) external view returns (uint256);
 
-    function creator() external view returns (address);
+    function owner() external view returns (address);
 
     function mintPrice() external view returns (uint256);
 }

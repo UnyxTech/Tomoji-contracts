@@ -108,8 +108,8 @@ contract TomojiManager is ITomojiManager {
             v3NonfungiblePositionManagerAddress,
             tokenAmount
         );
-        uint256 leftToken = ITomoji(tomojiAddr).balanceOf(tomojiAddr);
-        address creator = ITomoji(tomojiAddr).creator();
+        uint256 leftToken = ITomoji(tomojiAddr).balanceOf(address(this));
+        address creator = ITomoji(tomojiAddr).owner();
         if (leftToken > 0) {
             TransferHelper.erc20TransferFrom(
                 tomojiAddr,
@@ -152,7 +152,7 @@ contract TomojiManager is ITomojiManager {
         uint256 feePercentage = ITomojiFactory(_factory)._protocolPercentage();
         uint256 tokenReward = ITomoji(tomojiAddr).balanceOf(address(this));
         uint256 ethReward = address(this).balance;
-        address creator = ITomoji(tomojiAddr).creator();
+        address creator = ITomoji(tomojiAddr).owner();
         if (tokenReward > 0) {
             uint256 feeProtocol = (tokenReward * feePercentage) / 10000;
             TransferHelper.erc20Transfer(tomojiAddr, feeAddr, feeProtocol);
@@ -247,6 +247,7 @@ contract TomojiManager is ITomojiManager {
         address _weth = INonfungiblePositionManager(
             v3NonfungiblePositionManagerAddress
         ).WETH9();
+
         (address token0, address token1, bool zeroForOne) = tomojiAddr < _weth
             ? (tomojiAddr, _weth, true)
             : (_weth, tomojiAddr, false);
@@ -263,8 +264,8 @@ contract TomojiManager is ITomojiManager {
                         token0: token0,
                         token1: token1,
                         fee: uint24(10_000),
-                        tickLower: int24(-887272),
-                        tickUpper: int24(887272),
+                        tickLower: int24(-887200),
+                        tickUpper: int24(887200),
                         amount0Desired: zeroForOne ? tokenAmount : ethValue,
                         amount1Desired: zeroForOne ? ethValue : tokenAmount,
                         amount0Min: 0,

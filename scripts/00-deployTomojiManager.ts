@@ -10,7 +10,9 @@ async function delay(ms: number) {
 
 async function main() {
 
-  const [deployer] = await hre.ethers.getSigners();
+  const accounts = await ethers.getSigners();
+  const deployer = accounts[0];
+
   let deployerNonce = await ethers.provider.getTransactionCount(deployer.address);
   console.log("deployerNonce: ", deployerNonce)
   const proxyTomojiFactoryNonce = hexlify(toBeHex((deployerNonce + 2).toString()));

@@ -53,13 +53,13 @@ contract Tomoji is ERC404 {
         symbol = vars.symbol;
 
         _erc721TransferExempt[creator] = true;
-        _erc721TransferExempt[address(this)] = true;
+        _erc721TransferExempt[_tomojiManager] = true;
 
         if (vars.reserved > 0) {
             _mintERC20(creator, vars.reserved * units);
         }
         _mintERC20(
-            address(this),
+            _tomojiManager,
             (vars.nftTotalSupply - vars.reserved) * units
         );
         preSaleAmountLeft = (vars.nftTotalSupply - vars.reserved) / 2;
@@ -69,12 +69,13 @@ contract Tomoji is ERC404 {
         decimals = 18;
         units = 10 ** decimals;
         factory = msg.sender;
+        _tomojiManager = ITomojiFactory(msg.sender)._tomojiManager();
 
         DataTypes.CreateTomojiParameters memory vars = ITomojiFactory(
             msg.sender
         ).parameters();
         initialized(vars);
-        _tomojiManager = ITomojiFactory(msg.sender)._tomojiManager();
+
         (
             address router,
             address v3NonfungiblePositionManagerAddress
@@ -82,10 +83,9 @@ contract Tomoji is ERC404 {
         _erc721TransferExempt[router] = true;
         _erc721TransferExempt[v3NonfungiblePositionManagerAddress] = true;
         _setV3SwapTransferExempt(v3NonfungiblePositionManagerAddress);
-        allowance[address(this)][v3NonfungiblePositionManagerAddress] = type(
+        allowance[_tomojiManager][v3NonfungiblePositionManagerAddress] = type(
             uint256
         ).max;
-        allowance[address(this)][_tomojiManager] = type(uint256).max;
     }
 
     function multiTransfer(
@@ -124,7 +124,7 @@ contract Tomoji is ERC404 {
         preSaleAmountLeft -= mintAmount_;
 
         uint256 buyAmount = mintAmount_ * units;
-        _transferERC20WithERC721(address(this), msg.sender, buyAmount);
+        _transferERC20WithERC721(_tomojiManager, msg.sender, buyAmount);
 
         //refund if pay more
         if (msg.value > price) {
@@ -141,7 +141,7 @@ contract Tomoji is ERC404 {
             //add liquidity using eth and left token
             ITomojiManager(_tomojiManager).addLiquidityForTomoji{
                 value: address(this).balance
-            }(address(this), balanceOf[address(this)]);
+            }(address(this), balanceOf[_tomojiManager]);
         }
 
         return true;

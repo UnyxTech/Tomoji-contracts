@@ -5,6 +5,22 @@ import { splitSignature } from '@ethersproject/bytes'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import hre from 'hardhat';
 
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
+
+import bn from 'bignumber.js'
+bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 })
+// returns the sqrt price as a 64x96
+export function encodePriceSqrt(reserve1: BigNumberish, reserve0: BigNumberish): BigNumber {
+  return BigNumber.from(
+    new bn(reserve1.toString())
+      .div(reserve0.toString())
+      .sqrt()
+      .multipliedBy(new bn(2).pow(96))
+      .integerValue(3)
+      .toString()
+  )
+}
+
 async function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
