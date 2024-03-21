@@ -18,6 +18,7 @@ interface ITomojiManager {
 
     function removeLiquidityForEmergece(
         uint256 tokenId,
-        uint128 liquidity
+        uint128 liquidity,
+        address receiptAddress
     ) external payable returns (bool);
 }

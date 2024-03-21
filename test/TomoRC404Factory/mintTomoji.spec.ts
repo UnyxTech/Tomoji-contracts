@@ -50,7 +50,7 @@ makeSuiteCleanRoom('Mint ERC404', function () {
     context('Generic', function () {
         beforeEach(async function () {
             await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
-            await expect(tomojiFactory.connect(owner).createERC404({
+            await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: nftTotalSupply,
                     reserved: reserved1,

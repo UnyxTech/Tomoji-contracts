@@ -29,7 +29,7 @@ async function main() {
   const tomojiManagerAddr = await tomojiFactory.connect(deployer)._tomojiManager();
   console.log("tomojiManagerAddr: ", tomojiManagerAddr)
 
-  const tx = await tomojiFactory.connect(deployer).createERC404({
+  const tx = await tomojiFactory.connect(deployer).createTomoji({
     creator: deployer.address, 
     nftTotalSupply: 10,
     reserved: 0,

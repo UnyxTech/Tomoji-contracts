@@ -63,7 +63,7 @@ contract TomojiFactory is OwnableUpgradeable {
         _daoContractAddr = owner;
     }
 
-    function createERC404(
+    function createTomoji(
         DataTypes.CreateTomojiParameters calldata vars
     ) external returns (address erc404) {
         {

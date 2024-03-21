@@ -7,6 +7,7 @@ import {INonfungiblePositionManager} from "./interfaces/INonfungiblePositionMana
 import {Math} from "./libraries/Math.sol";
 import {ITomojiManager} from "./interfaces/ITomojiManager.sol";
 import {ITomoji} from "./interfaces/ITomoji.sol";
+import {IWETH9} from "./interfaces/IWETH9.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {TransferHelper} from "./libraries/TransferHelper.sol";
 
@@ -151,7 +152,12 @@ contract TomojiManager is ITomojiManager {
         address feeAddr = ITomojiFactory(_factory)._protocolFeeAddress();
         uint256 feePercentage = ITomojiFactory(_factory)._protocolPercentage();
         uint256 tokenReward = ITomoji(tomojiAddr).balanceOf(address(this));
-        uint256 ethReward = address(this).balance;
+
+        address _weth = INonfungiblePositionManager(
+            v3NonfungiblePositionManagerAddress
+        ).WETH9();
+        uint256 ethReward = IWETH9(_weth).balanceOf(address(this));
+
         address creator = ITomoji(tomojiAddr).owner();
         if (tokenReward > 0) {
             uint256 feeProtocol = (tokenReward * feePercentage) / 10000;
@@ -163,6 +169,7 @@ contract TomojiManager is ITomojiManager {
             );
         }
         if (ethReward > 0) {
+            IWETH9(_weth).withdraw(ethReward);
             uint256 feeProtocol = (ethReward * feePercentage) / 10000;
             (bool success, ) = payable(feeAddr).call{value: feeProtocol}("");
             (bool success1, ) = payable(creator).call{
@@ -176,9 +183,17 @@ contract TomojiManager is ITomojiManager {
     }
 
     /// remove liquidity for emergece, just call by DAO
+    /**
+     *
+     * @param tokenId position nft id
+     * @param liquidity liquidity amount
+     * @param receiptAddress receiptAddress to receive token and weth
+     * Be care of receiptAddress, if it's a contract, it must have ablity to do with token and weth
+     */
     function removeLiquidityForEmergece(
         uint256 tokenId,
-        uint128 liquidity
+        uint128 liquidity,
+        address receiptAddress
     ) external payable override returns (bool) {
         address daoAddr = ITomojiFactory(_factory)._daoContractAddr();
         if (msg.sender != daoAddr) {
@@ -186,15 +201,25 @@ contract TomojiManager is ITomojiManager {
         }
         address v3NonfungiblePositionManagerAddress = _swapRouter
             .uniswapV3NonfungiblePositionManager;
-        (uint256 amount0, uint256 amount1) = INonfungiblePositionManager(
-            v3NonfungiblePositionManagerAddress
-        ).decreaseLiquidity(
+        INonfungiblePositionManager(v3NonfungiblePositionManagerAddress)
+            .decreaseLiquidity(
                 INonfungiblePositionManager.DecreaseLiquidityParams({
                     tokenId: tokenId,
                     liquidity: liquidity,
                     amount0Min: 0,
                     amount1Min: 0,
                     deadline: block.timestamp
+                })
+            );
+
+        (uint256 amount0, uint256 amount1) = INonfungiblePositionManager(
+            v3NonfungiblePositionManagerAddress
+        ).collect(
+                INonfungiblePositionManager.CollectParams({
+                    tokenId: tokenId,
+                    recipient: receiptAddress,
+                    amount0Max: type(uint128).max,
+                    amount1Max: type(uint128).max
                 })
             );
         emit RemoveLiquidityForEmergece(tokenId, liquidity, amount0, amount1);

@@ -32,7 +32,7 @@ makeSuiteCleanRoom('create ERC404', function () {
         context('Negatives', function () {
             it('User should fail to create if reserved large than supply.',   async function () {
                 await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
-                await expect(tomojiFactory.connect(owner).createERC404({
+                await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
                     reserved: 10001,
@@ -49,7 +49,7 @@ makeSuiteCleanRoom('create ERC404', function () {
             });
 
             it('User should fail to create twice using same param.',   async function () {
-                await expect(tomojiFactory.connect(owner).createERC404({
+                await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
                     reserved: 0,
@@ -63,7 +63,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                     baseURI: "https://tomo-baseuri/", 
                     contractURI: "https://tomo-contract"
                 })).to.be.not.reverted;
-                await expect(tomojiFactory.connect(owner).createERC404({
+                await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
                     reserved: 0,
@@ -83,7 +83,7 @@ makeSuiteCleanRoom('create ERC404', function () {
         context('Scenarios', function () {
             it('Create tomo emoji collection if pass correct param.',   async function () {
                 await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
-                await expect(tomojiFactory.connect(owner).createERC404({
+                await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
                     reserved: 100,
@@ -112,7 +112,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                 let baseUri = "https://tomo-baseuri/"
                 let contractUri = "https://tomo-contract"
                 
-                await expect(tomojiFactory.connect(owner).createERC404({
+                await expect(tomojiFactory.connect(owner).createTomoji({
                         creator: ownerAddress, 
                         nftTotalSupply: nftTotalSupply,
                         reserved: reserved1,

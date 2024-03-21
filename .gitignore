@@ -15,3 +15,6 @@ node_modules
 deployments/
 .openzeppelin
 arguments.js
+
+deploy/02-create-tomoji_spec.ts
+deploy/03-mint-tomoji_spec.ts
