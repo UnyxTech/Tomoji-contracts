@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PriceCalculator} from "./libraries/PriceCalculator.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {Tomoji} from "./Tomoji.sol";
 import {ITomoji} from "./interfaces/ITomoji.sol";
@@ -17,6 +18,7 @@ contract TomojiFactory is OwnableUpgradeable {
     error ZeroAddress();
     error NftSupplyExceedMaxSupply();
     error CantCreateTomoji();
+    error MaxPerWalletTooMuch();
 
     event TomojiCreated(
         address indexed addr,
@@ -72,52 +74,27 @@ contract TomojiFactory is OwnableUpgradeable {
     function createTomoji(
         DataTypes.CreateTomojiParameters calldata vars
     ) external returns (address erc404) {
-        if (!_canCreateTomoji) {
-            revert CantCreateTomoji();
-        }
-        {
-            if (msg.sender != vars.creator) {
-                revert InvaildParam();
-            }
-            if (vars.nftTotalSupply > _maxNftSupply) {
-                revert NftSupplyExceedMaxSupply();
-            }
-            if (
-                _bSupportReserved &&
-                vars.reserved >
-                (vars.nftTotalSupply * _maxReservePercentage) / 10000
-            ) {
-                revert ReservedTooMuch();
-            }
-            if (vars.maxPerWallet > (vars.nftTotalSupply * 200) / 10000) {
-                revert ReservedTooMuch();
-            }
-            if (vars.preSaleDeadLine > block.timestamp + _maxPreSaleTime) {
-                revert PreSaleDeadLineTooFar();
-            }
-            if (_erc404Contract[vars.creator][vars.name] != address(0x0)) {
-                revert ContractAlreadyExist();
-            }
+        _checkParam(vars);
 
-            _parameters = vars;
-            if (!_bSupportReserved) {
-                _parameters.reserved = 0;
-            }
-            erc404 = address(
-                new Tomoji{
-                    salt: keccak256(
-                        abi.encode(vars.name, vars.symbol, vars.creator)
-                    )
-                }()
-            );
-            _erc404Contract[vars.creator][vars.name] = erc404;
-            ITomojiManager(_tomojiManager).prePairTomojiEnv(
-                erc404,
-                vars.sqrtPriceX96,
-                vars.sqrtPriceB96
-            );
-            delete _parameters;
+        _parameters = vars;
+        if (!_bSupportReserved) {
+            _parameters.reserved = 0;
         }
+        erc404 = address(
+            new Tomoji{
+                salt: keccak256(
+                    abi.encode(vars.name, vars.symbol, vars.creator)
+                )
+            }()
+        );
+        _erc404Contract[vars.creator][vars.name] = erc404;
+        ITomojiManager(_tomojiManager).prePairTomojiEnv(
+            erc404,
+            vars.sqrtPriceX96,
+            vars.sqrtPriceB96
+        );
+        delete _parameters;
+
         emit TomojiCreated(
             erc404,
             vars.creator,
@@ -219,5 +196,52 @@ contract TomojiFactory is OwnableUpgradeable {
         returns (DataTypes.CreateTomojiParameters memory)
     {
         return _parameters;
+    }
+
+    function _checkParam(
+        DataTypes.CreateTomojiParameters calldata vars
+    ) internal view {
+        if (!_canCreateTomoji) {
+            revert CantCreateTomoji();
+        }
+        if (msg.sender != vars.creator) {
+            revert InvaildParam();
+        }
+        if (vars.nftTotalSupply > _maxNftSupply) {
+            revert NftSupplyExceedMaxSupply();
+        }
+        if (
+            _bSupportReserved &&
+            vars.reserved >
+            (vars.nftTotalSupply * _maxReservePercentage) / 10000
+        ) {
+            revert ReservedTooMuch();
+        }
+        if (vars.maxPerWallet > (vars.nftTotalSupply * 200) / 10000) {
+            revert MaxPerWalletTooMuch();
+        }
+        if (vars.preSaleDeadLine > block.timestamp + _maxPreSaleTime) {
+            revert PreSaleDeadLineTooFar();
+        }
+        if (_erc404Contract[vars.creator][vars.name] != address(0x0)) {
+            revert ContractAlreadyExist();
+        }
+
+        uint256 mintPrice = PriceCalculator.getPrice(vars.sqrtPriceX96);
+        uint256 x = vars.price > mintPrice
+            ? vars.price - mintPrice
+            : mintPrice - vars.price;
+        if (x > 5) {
+            revert InvaildParam();
+        }
+
+        uint256 mintPriceEth = PriceCalculator.getPrice(vars.sqrtPriceB96);
+        uint256 priceEth = 10 ** 36 / vars.price;
+        uint256 y = priceEth > mintPriceEth
+            ? priceEth - mintPriceEth
+            : mintPriceEth - priceEth;
+        if (y > 5) {
+            revert InvaildParam();
+        }
     }
 }

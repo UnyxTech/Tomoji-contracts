@@ -20,6 +20,7 @@ contract Tomoji is ERC404 {
     error SendETHFailed();
     error ZeroAddress();
     error X404SwapV3FactoryMismatch();
+    error TradingNotEnable();
 
     address public _tomojiManager;
     uint256 public mintPrice;
@@ -29,6 +30,7 @@ contract Tomoji is ERC404 {
     uint256 public preSaleAmountLeft;
     address private creator;
     string private baseTokenURI;
+    bool enableTrading;
 
     mapping(address => uint) private mintAccount;
     address public immutable factory;
@@ -142,6 +144,9 @@ contract Tomoji is ERC404 {
             ITomojiManager(_tomojiManager).addLiquidityForTomoji{
                 value: address(this).balance
             }(address(this), balanceOf[_tomojiManager]);
+
+            //after sold out, open trading
+            enableTrading = true;
         }
 
         return true;
@@ -240,5 +245,16 @@ contract Tomoji is ERC404 {
                 ++i;
             }
         }
+    }
+
+    function _transferERC20(
+        address from_,
+        address to_,
+        uint256 value_
+    ) internal virtual override {
+        if (!enableTrading) {
+            revert TradingNotEnable();
+        }
+        super._transferERC20(from_, to_, value_);
     }
 }
