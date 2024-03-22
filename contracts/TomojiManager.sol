@@ -51,6 +51,8 @@ contract TomojiManager is ITomojiManager {
         _;
     }
 
+    receive() external payable {}
+
     constructor(DataTypes.SwapRouter memory swapRouter, address factory) {
         address routerAddr = swapRouter.routerAddr;
         address v3NonfungiblePositionManager = swapRouter
