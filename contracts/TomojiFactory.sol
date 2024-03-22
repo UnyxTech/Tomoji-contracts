@@ -15,6 +15,8 @@ contract TomojiFactory is OwnableUpgradeable {
     error ContractAlreadyExist();
     error ContractNotExist();
     error ZeroAddress();
+    error NftSupplyExceedMaxSupply();
+    error CantCreateTomoji();
 
     event TomojiCreated(
         address indexed addr,
@@ -35,10 +37,12 @@ contract TomojiFactory is OwnableUpgradeable {
     address public _tomojiManager;
     uint256 public _maxReservePercentage; //defaule 1000 as 10%
     uint256 public _maxPreSaleTime; //defaule 7 days
+    uint256 public _maxNftSupply; //defaule 100_000
     address public _protocolFeeAddress;
-    uint256 public _protocolPercentage; //default 50% of liquidity reward
+    uint256 public _protocolPercentage; //default 10% of liquidity reward
     address public _daoContractAddr;
     bool public _bSupportReserved;
+    bool public _canCreateTomoji;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -57,24 +61,35 @@ contract TomojiFactory is OwnableUpgradeable {
         _tomojiManager = tomojiManager;
         _maxReservePercentage = 1000;
         _maxPreSaleTime = 7 * 24 * 60 * 60;
-        _protocolPercentage = 5000;
+        _maxNftSupply = 100000;
+        _protocolPercentage = 1000;
         _protocolFeeAddress = owner;
         _bSupportReserved = false;
         _daoContractAddr = owner;
+        _canCreateTomoji = true;
     }
 
     function createTomoji(
         DataTypes.CreateTomojiParameters calldata vars
     ) external returns (address erc404) {
+        if (!_canCreateTomoji) {
+            revert CantCreateTomoji();
+        }
         {
             if (msg.sender != vars.creator) {
                 revert InvaildParam();
+            }
+            if (vars.nftTotalSupply > _maxNftSupply) {
+                revert NftSupplyExceedMaxSupply();
             }
             if (
                 _bSupportReserved &&
                 vars.reserved >
                 (vars.nftTotalSupply * _maxReservePercentage) / 10000
             ) {
+                revert ReservedTooMuch();
+            }
+            if (vars.maxPerWallet > (vars.nftTotalSupply * 200) / 10000) {
                 revert ReservedTooMuch();
             }
             if (vars.preSaleDeadLine > block.timestamp + _maxPreSaleTime) {
@@ -189,6 +204,13 @@ contract TomojiFactory is OwnableUpgradeable {
             revert ZeroAddress();
         }
         _tomojiManager = newAddr;
+    }
+
+    function setCreateTomoji(bool canCreate) public onlyOwner {
+        if (_canCreateTomoji == canCreate) {
+            revert InvaildParam();
+        }
+        _canCreateTomoji = canCreate;
     }
 
     function parameters()
