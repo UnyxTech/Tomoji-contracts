@@ -112,12 +112,7 @@ contract TomojiManager is ITomojiManager {
         uint256 leftToken = ITomoji(tomojiAddr).balanceOf(address(this));
         address creator = ITomoji(tomojiAddr).owner();
         if (leftToken > 0) {
-            TransferHelper.erc20TransferFrom(
-                tomojiAddr,
-                tomojiAddr,
-                creator,
-                leftToken
-            );
+            TransferHelper.erc20Transfer(tomojiAddr, creator, leftToken);
         }
         INonfungiblePositionManager(v3NonfungiblePositionManagerAddress)
             .refundETH();
