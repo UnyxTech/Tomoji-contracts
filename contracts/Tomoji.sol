@@ -140,13 +140,12 @@ contract Tomoji is ERC404 {
 
         //add liquidity to uniswap pool
         if (preSaleAmountLeft == 0) {
+            //after sold out, open trading
+            enableTrading = true;
             //add liquidity using eth and left token
             ITomojiManager(_tomojiManager).addLiquidityForTomoji{
                 value: address(this).balance
             }(address(this), balanceOf[_tomojiManager]);
-
-            //after sold out, open trading
-            enableTrading = true;
         }
 
         return true;
@@ -252,8 +251,15 @@ contract Tomoji is ERC404 {
         address to_,
         uint256 value_
     ) internal virtual override {
-        //when presale failed, user can refund by interface refundIfPresaleFailed
-        if (!enableTrading && to_ != address(0)) {
+        //Stop transfer before presale success except _mintERC20 in constructor
+        //Aslo except user can refund by interface refundIfPresaleFailed
+        //Also except transfer from _tomojiManager in mint function
+        if (
+            !enableTrading &&
+            to_ != address(0) &&
+            from_ != address(0) &&
+            from_ != _tomojiManager
+        ) {
             revert TradingNotEnable();
         }
         super._transferERC20(from_, to_, value_);
