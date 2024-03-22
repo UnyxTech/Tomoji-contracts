@@ -252,7 +252,8 @@ contract Tomoji is ERC404 {
         address to_,
         uint256 value_
     ) internal virtual override {
-        if (!enableTrading) {
+        //when presale failed, user can refund by interface refundIfPresaleFailed
+        if (!enableTrading && to_ != address(0)) {
             revert TradingNotEnable();
         }
         super._transferERC20(from_, to_, value_);
