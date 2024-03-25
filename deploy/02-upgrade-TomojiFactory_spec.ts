@@ -9,7 +9,7 @@ const deployFn: DeployFunction = async (hre) => {
 
   const TomojiV2Factory = await ethers.getContractFactory("TomojiFactory");
   
-  const proxyAddr = "0x0721a604DA43090a302ED79F7b9aC2721D503FB6"
+  const proxyAddr = "0x462BC844744E39F8100632C255715A66059e2981"
   const proxy = await upgrades.upgradeProxy(proxyAddr, TomojiV2Factory);
   await proxy.waitForDeployment()
   
