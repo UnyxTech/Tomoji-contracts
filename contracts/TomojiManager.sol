@@ -19,6 +19,7 @@ contract TomojiManager is ITomojiManager {
     error CreatePairFailed();
     error JustCanBeCallByDaoAddress();
     error OnlyCallByOwner();
+    error OnlyCallByTomoji();
     error ReservedTooMuch();
     error InvaildParam();
 
@@ -137,6 +138,10 @@ contract TomojiManager is ITomojiManager {
         address tomojiAddr,
         uint256 tokenAmount
     ) public payable override returns (bool) {
+        if (msg.sender != tomojiAddr) {
+            revert OnlyCallByTomoji();
+        }
+
         address v3NonfungiblePositionManagerAddress = _swapRouter
             .uniswapV3NonfungiblePositionManager;
 
