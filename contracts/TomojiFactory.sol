@@ -83,7 +83,7 @@ contract TomojiFactory is OwnableUpgradeable {
                 salt: keccak256(
                     abi.encode(vars.name, vars.symbol, vars.creator)
                 ),
-                value: msg.value
+                value: price
             }()
         );
         _erc404Contract[vars.creator][vars.name] = erc404;
