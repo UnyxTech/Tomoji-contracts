@@ -14,10 +14,4 @@ interface ITomojiFactory {
     ) external view returns (address);
 
     function _tomojiManager() external view returns (address);
-
-    function _protocolFeeAddress() external view returns (address);
-
-    function _protocolPercentage() external view returns (uint256);
-
-    function _daoContractAddr() external view returns (address);
 }

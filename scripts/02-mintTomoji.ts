@@ -3,7 +3,7 @@ import { ethers, upgrades } from 'hardhat';
 import { hexlify, keccak256, toBeHex} from 'ethers';
 import { encode } from '@ethersproject/rlp'
 import { TomojiFactory__factory, TomojiManager__factory, Tomoji__factory } from '../typechain-types';
-import { encodePriceSqrt } from './deploy-utils';
+import { buildMintSeparator, encodePriceSqrt } from './deploy-utils';
 
 async function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,7 +19,11 @@ async function main() {
 
   const tomojiAddr = "0x7F1C1e7ecf8aE06482991d9e797e596B68f1aaEC"
   const tomojiContract = Tomoji__factory.connect(tomojiAddr)
-  const mintTx = await tomojiContract.connect(owner).mint(1, {value: ethers.parseEther("0.0001")});
+
+  const TOMOJI_NAME = 'Tomoji'
+  const sig = await buildMintSeparator(tomojiAddr, TOMOJI_NAME, deployer.address, owner.address, 1);
+
+  const mintTx = await tomojiContract.connect(owner).mint(1, sig.v, sig.r, sig.s, {value: ethers.parseEther("0.0001")});
   await mintTx.wait()
   await delay(2000)
 

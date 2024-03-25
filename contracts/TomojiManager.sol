@@ -44,14 +44,14 @@ contract TomojiManager is ITomojiManager {
         uint256 amount1
     );
 
-    bool private _canCreateTomoji;
-    uint256 private _maxPurchasePercentageForCreator; //defaule 1000 as 10%
-    uint256 private _maxPreSaleTime; //defaule 7 days
-    uint256 private _maxNftSupply; //defaule 100_000
-    uint256 private _protocolPercentage; //default 10% of liquidity reward
-    address private _daoContractAddr;
-    address private _protocolFeeAddress;
-    address private _owner;
+    bool public _canCreateTomoji;
+    uint256 public _maxPurchasePercentageForCreator; //defaule 1000 as 10%
+    uint256 public _maxPreSaleTime; //defaule 7 days
+    uint256 public _maxNftSupply; //defaule 100_000
+    uint256 public _protocolPercentage; //default 10% of liquidity reward
+    address public _daoContractAddr;
+    address public _protocolFeeAddress;
+    address public _owner;
 
     DataTypes.SwapRouter private _swapRouter;
     address public _factory;
@@ -230,8 +230,7 @@ contract TomojiManager is ITomojiManager {
         uint128 liquidity,
         address receiptAddress
     ) external payable override returns (bool) {
-        address daoAddr = ITomojiFactory(_factory)._daoContractAddr();
-        if (msg.sender != daoAddr) {
+        if (msg.sender != _daoContractAddr) {
             revert JustCanBeCallByDaoAddress();
         }
         address v3NonfungiblePositionManagerAddress = _swapRouter
