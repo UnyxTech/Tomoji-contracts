@@ -19,6 +19,8 @@ contract TomojiFactory is OwnableUpgradeable {
     error NftSupplyExceedMaxSupply();
     error CantCreateTomoji();
     error MaxPerWalletTooMuch();
+    error MsgValueNotEnough();
+    error SendETHFailed();
 
     event TomojiCreated(
         address indexed addr,
@@ -37,13 +39,12 @@ contract TomojiFactory is OwnableUpgradeable {
     mapping(address => mapping(string => address)) public _erc404Contract;
     DataTypes.CreateTomojiParameters private _parameters;
     address public _tomojiManager;
-    uint256 public _maxReservePercentage; //defaule 1000 as 10%
+    uint256 public _maxPurchasePercentageForCreator; //defaule 1000 as 10%
     uint256 public _maxPreSaleTime; //defaule 7 days
     uint256 public _maxNftSupply; //defaule 100_000
     address public _protocolFeeAddress;
     uint256 public _protocolPercentage; //default 10% of liquidity reward
     address public _daoContractAddr;
-    bool public _bSupportReserved;
     bool public _canCreateTomoji;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -61,30 +62,42 @@ contract TomojiFactory is OwnableUpgradeable {
         __Ownable_init(owner);
 
         _tomojiManager = tomojiManager;
-        _maxReservePercentage = 1000;
+        _maxPurchasePercentageForCreator = 1000;
         _maxPreSaleTime = 7 * 24 * 60 * 60;
         _maxNftSupply = 100000;
         _protocolPercentage = 1000;
         _protocolFeeAddress = owner;
-        _bSupportReserved = false;
         _daoContractAddr = owner;
         _canCreateTomoji = true;
     }
 
     function createTomoji(
         DataTypes.CreateTomojiParameters calldata vars
-    ) external returns (address erc404) {
+    ) external payable returns (address erc404) {
         _checkParam(vars);
 
         _parameters = vars;
-        if (!_bSupportReserved) {
-            _parameters.reserved = 0;
+        uint256 price;
+        if (vars.reserved > 0) {
+            price = vars.reserved * vars.price;
+            if (msg.value < price) {
+                revert MsgValueNotEnough();
+            }
+        }
+        if (msg.value > price) {
+            (bool success, ) = payable(msg.sender).call{
+                value: msg.value - price
+            }("");
+            if (!success) {
+                revert SendETHFailed();
+            }
         }
         erc404 = address(
             new Tomoji{
                 salt: keccak256(
                     abi.encode(vars.name, vars.symbol, vars.creator)
-                )
+                ),
+                value: msg.value
             }()
         );
         _erc404Contract[vars.creator][vars.name] = erc404;
@@ -95,19 +108,7 @@ contract TomojiFactory is OwnableUpgradeable {
         );
         delete _parameters;
 
-        emit TomojiCreated(
-            erc404,
-            vars.creator,
-            vars.nftTotalSupply,
-            vars.reserved,
-            vars.maxPerWallet,
-            vars.price,
-            vars.preSaleDeadLine,
-            vars.name,
-            vars.symbol,
-            vars.baseURI,
-            vars.contractURI
-        );
+        _emitCreateTomojiEvent(erc404, vars);
     }
 
     function setTokenURI(
@@ -139,12 +140,12 @@ contract TomojiFactory is OwnableUpgradeable {
     }
 
     function setMaxReservePercentage(
-        uint256 newReservePercentage
+        uint256 newPurchasePercentage
     ) public onlyOwner {
-        if (newReservePercentage > 5000) {
+        if (newPurchasePercentage > 5000) {
             revert ReservedTooMuch();
         }
-        _maxReservePercentage = newReservePercentage;
+        _maxPurchasePercentageForCreator = newPurchasePercentage;
     }
 
     function setMaxPreSaleTime(uint256 newMaxPreSaleTime) public onlyOwner {
@@ -163,10 +164,6 @@ contract TomojiFactory is OwnableUpgradeable {
             revert InvaildParam();
         }
         _protocolPercentage = newPercentage;
-    }
-
-    function setSupportReserved(bool bSupportReserved) public onlyOwner {
-        _bSupportReserved = bSupportReserved;
     }
 
     function setDaoContractAddr(address newAddr) public onlyOwner {
@@ -211,9 +208,8 @@ contract TomojiFactory is OwnableUpgradeable {
             revert NftSupplyExceedMaxSupply();
         }
         if (
-            _bSupportReserved &&
             vars.reserved >
-            (vars.nftTotalSupply * _maxReservePercentage) / 10000
+            (vars.nftTotalSupply * _maxPurchasePercentageForCreator) / 10000
         ) {
             revert ReservedTooMuch();
         }
@@ -243,5 +239,24 @@ contract TomojiFactory is OwnableUpgradeable {
         if (y > 5) {
             revert InvaildParam();
         }
+    }
+
+    function _emitCreateTomojiEvent(
+        address erc404,
+        DataTypes.CreateTomojiParameters calldata vars
+    ) internal {
+        emit TomojiCreated(
+            erc404,
+            vars.creator,
+            vars.nftTotalSupply,
+            vars.reserved,
+            vars.maxPerWallet,
+            vars.price,
+            vars.preSaleDeadLine,
+            vars.name,
+            vars.symbol,
+            vars.baseURI,
+            vars.contractURI
+        );
     }
 }

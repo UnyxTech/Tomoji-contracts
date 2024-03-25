@@ -22,15 +22,15 @@ contract Tomoji is ERC404 {
     error X404SwapV3FactoryMismatch();
     error TradingNotEnable();
 
-    address public _tomojiManager;
-    uint256 public mintPrice;
+    address private _tomojiManager;
+    uint256 private mintPrice;
     string public contractURI;
-    uint256 public maxPerWallet;
-    uint256 public preSaleDeadLine;
+    uint256 private maxPerWallet;
+    uint256 private preSaleDeadLine;
     uint256 public preSaleAmountLeft;
     address private creator;
     string private baseTokenURI;
-    bool enableTrading;
+    bool private enableTrading;
 
     mapping(address => uint) private mintAccount;
     address public immutable factory;
@@ -67,7 +67,7 @@ contract Tomoji is ERC404 {
         preSaleAmountLeft = (vars.nftTotalSupply - vars.reserved) / 2;
     }
 
-    constructor() {
+    constructor() payable {
         decimals = 18;
         units = 10 ** decimals;
         factory = msg.sender;
