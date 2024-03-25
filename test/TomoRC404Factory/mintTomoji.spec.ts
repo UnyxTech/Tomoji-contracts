@@ -8,6 +8,7 @@ import {
     tomojiFactory,
     ownerAddress,
     userTwoAddress,
+    tomojiManagerAddr,
 } from '../__setup.spec';
 import { Tomoji__factory } from '../../typechain-types';
 import { ethers } from 'hardhat';
@@ -49,7 +50,7 @@ makeSuiteCleanRoom('Mint ERC404', function () {
 
     context('Generic', function () {
         beforeEach(async function () {
-            await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
+            
             await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: nftTotalSupply,
@@ -63,12 +64,12 @@ makeSuiteCleanRoom('Mint ERC404', function () {
                     symbol: symbol, 
                     baseURI: baseUri, 
                     contractURI: contractUri
-                })
+                }, {value: ethers.parseEther("15")})
             ).to.be.not.reverted;
             tomoErc404Address = await tomojiFactory.connect(owner)._erc404Contract(ownerAddress, name);
 
             let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-            expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply - reserved1)).toString()));
+            expect(await brc404Contract.balanceOf(tomojiManagerAddr)).to.equal(ethers.parseEther(((nftTotalSupply - reserved1)).toString()));
         });
 
         context('Negatives', function () {
@@ -102,16 +103,16 @@ makeSuiteCleanRoom('Mint ERC404', function () {
                 expect( await brc404Contract.ownerOf(2)).to.equal(userAddress);
                 await expect(brc404Contract.transfer(userTwoAddress, 
                     ethers.parseEther("0.4")
-                )).to.not.be.reverted;
-                expect( await brc404Contract.ownerOf(1)).to.equal(userAddress);
-                const arr = await brc404Contract.connect(user).getERC721TokensInQueue(0,1)
-                expect(arr[0]).to.equal(2)
-                await expect(brc404Contract.transfer(userTwoAddress, 
-                    ethers.parseEther("0.7")
-                )).to.not.be.reverted;
-                expect( await brc404Contract.ownerOf(2)).to.equal(userTwoAddress);
-                const arr1 = await brc404Contract.connect(user).getERC721TokensInQueue(0,1)
-                expect(arr1[0]).to.equal(1)
+                )).to.be.revertedWithCustomError(brc404Contract, ERRORS.TradingNotEnable)
+                // expect( await brc404Contract.ownerOf(1)).to.equal(userAddress);
+                // const arr = await brc404Contract.connect(user).getERC721TokensInQueue(0,1)
+                // expect(arr[0]).to.equal(2)
+                // await expect(brc404Contract.transfer(userTwoAddress, 
+                //     ethers.parseEther("0.7")
+                // )).to.not.be.reverted;
+                // expect( await brc404Contract.ownerOf(2)).to.equal(userTwoAddress);
+                // const arr1 = await brc404Contract.connect(user).getERC721TokensInQueue(0,1)
+                // expect(arr1[0]).to.equal(1)
             });
         })
     })

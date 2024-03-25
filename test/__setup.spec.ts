@@ -26,6 +26,7 @@ export let userAddress: string;
 export let userTwoAddress: string;
 export let tomojiFactory: TomojiFactory;
 export let tomojiManager: TomojiManager;
+export let tomojiManagerAddr: string;
 
 export const decimals = 18;
 
@@ -63,9 +64,10 @@ before(async function () {
     uniswapV3NonfungiblePositionManager: '0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1',
   }
   tomojiManager = await new TomojiManager__factory(deployer).deploy(swapRouter, TomojiFactoryProxyAddress);
+  tomojiManagerAddr = await tomojiManager.getAddress()
 
   const TomojiFactory = await ethers.getContractFactory("TomojiFactory");
-  const proxy = await upgrades.deployProxy(TomojiFactory, [ownerAddress, await tomojiManager.getAddress()]);
+  const proxy = await upgrades.deployProxy(TomojiFactory, [ownerAddress, tomojiManagerAddr]);
   const proxyAddress = await proxy.getAddress()
   console.log("proxy address: ", proxyAddress)
   console.log("admin address: ", await upgrades.erc1967.getAdminAddress(proxyAddress))

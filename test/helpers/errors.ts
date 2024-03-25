@@ -4,6 +4,7 @@ export const ERRORS = {
   InvaildParam: "InvaildParam",
   ReachMaxPerMint: "ReachMaxPerMint",
   NotEnough: "NotEnough",
-  NotFound: "NotFound"
+  NotFound: "NotFound",
+  TradingNotEnable: "TradingNotEnable",
 };
   

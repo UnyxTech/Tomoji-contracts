@@ -1,6 +1,6 @@
 
 import {
-    makeSuiteCleanRoom, owner, tomojiFactory,ownerAddress, user
+    makeSuiteCleanRoom, owner, tomojiFactory,ownerAddress, user, tomojiManager, tomojiManagerAddr
 } from '../__setup.spec';
 import { expect } from 'chai';
 import { ERRORS } from '../helpers/errors';
@@ -31,7 +31,7 @@ makeSuiteCleanRoom('create ERC404', function () {
     context('Generic', function () {
         context('Negatives', function () {
             it('User should fail to create if reserved large than supply.',   async function () {
-                await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
+                
                 await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
@@ -82,7 +82,6 @@ makeSuiteCleanRoom('create ERC404', function () {
 
         context('Scenarios', function () {
             it('Create tomo emoji collection if pass correct param.',   async function () {
-                await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
                 await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
@@ -96,10 +95,10 @@ makeSuiteCleanRoom('create ERC404', function () {
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
                     contractURI: "https://tomo-contract"
-                })).to.not.be.reverted;
+                }, {value: ethers.parseEther("1")})).to.not.be.reverted;
             })
             it('Get correct variable tomo emoji collection if pass correct param.',   async function () {
-                await expect(tomojiFactory.connect(owner).setSupportReserved(true)).to.be.not.reverted
+                
                 let tomoErc404Address: string
                 let nftTotalSupply = 10000
                 let reserved0 = 0
@@ -125,13 +124,16 @@ makeSuiteCleanRoom('create ERC404', function () {
                         symbol: symbol, 
                         baseURI: baseUri, 
                         contractURI: contractUri
-                    })
+                    }, {value: ethers.parseEther("15")})
                 ).to.not.be.reverted;
+
                 tomoErc404Address = await tomojiFactory.connect(owner)._erc404Contract(ownerAddress, name);
     
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                expect(await brc404Contract.balanceOf(tomoErc404Address)).to.equal(ethers.parseEther(((nftTotalSupply-reserved1)).toString()));
+                expect(await brc404Contract.balanceOf(tomojiManagerAddr)).to.equal(ethers.parseEther(((nftTotalSupply-reserved1)).toString()));
                 expect(await brc404Contract.balanceOf(ownerAddress)).to.equal(ethers.parseEther(((reserved1)).toString()));
+
+                expect(await ethers.provider.getBalance(tomoErc404Address)).to.equal(ethers.parseEther("10"));
             })
         })
     })
