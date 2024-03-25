@@ -78,20 +78,20 @@ makeSuiteCleanRoom('Mint ERC404', function () {
 
         context('Negatives', function () {
             it('Mint failed if mint amount is 0.',   async function () {
-                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 0);
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, ownerAddress, userAddress, 0);
 
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
                 await expect(brc404Contract.mint(0, sig.v, sig.r, sig.s)).to.be.revertedWithCustomError(brc404Contract, ERRORS.InvaildParam)
             });
             it('Mint failed if msg.valur less than you need to pay.',   async function () {
-                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 2);
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, ownerAddress, userAddress, 2);
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
                 await expect(brc404Contract.mint(2, sig.v, sig.r, sig.s, {
                     value: ethers.parseEther("0.01")
                 })).to.be.revertedWithCustomError(brc404Contract, ERRORS.InvaildParam)
             });
             it('Mint failed if mint amount ReachMaxPerMint.',   async function () {
-                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 201);
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, ownerAddress, userAddress, 201);
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
                 await expect(brc404Contract.mint(201, sig.v, sig.r, sig.s, {
                     value: ethers.parseEther("200")
@@ -101,12 +101,12 @@ makeSuiteCleanRoom('Mint ERC404', function () {
 
         context('Scenarios', function () {
             it('Get correct variable if mint Tomo-emoji success.',   async function () {
-                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 2);
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, ownerAddress, userAddress, 2);
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
                 await expect(brc404Contract.mint(2, sig.v, sig.r, sig.s, {
                     value: ethers.parseEther("0.4")
                 })).to.not.be.reverted;
-                
+
                 expect( await brc404Contract.balanceOf(userAddress)).to.equal(ethers.parseEther("2"));
                 expect( await brc404Contract.erc721BalanceOf(userAddress)).to.equal(2);
                 expect( await brc404Contract.ownerOf(1)).to.equal(userAddress);

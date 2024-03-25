@@ -31,7 +31,7 @@ contract Tomoji is ERC404 {
     bytes32 public constant MINT_TYPEHASH =
         keccak256(
             abi.encodePacked(
-                "Mint(address tomoji,address sender,uint256 amount)"
+                "Mint(address subject,address sender,uint256 amount)"
             )
         );
 
@@ -332,7 +332,7 @@ contract Tomoji is ERC404 {
                     "\x19\x01",
                     DOMAIN_SEPARATOR,
                     keccak256(
-                        abi.encode(MINT_TYPEHASH, address(this), sender, amount)
+                        abi.encode(MINT_TYPEHASH, creator, sender, amount)
                     )
                 )
             );

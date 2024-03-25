@@ -36,24 +36,24 @@ export async function revertToSnapshot() {
 export async function buildMintSeparator(
   tomo: string,
   name: string,
-  tomojiAddress: string,
+  subjectAddress: string,
   userAddress: string,
   amount: number
 ): Promise<{ v: number; r: string; s: string }> {
-  const msgParams = buildMintParams(tomo, name, tomojiAddress, userAddress, amount);
+  const msgParams = buildMintParams(tomo, name, subjectAddress, userAddress, amount);
   return await getSig(msgParams);
 }
 
 const buildMintParams = (
   tomo: string,
   name: string,
-  tomojiAddress: string,
+  subjectAddress: string,
   userAddress: string,
   amount: number
 ) => ({
   types: {
     Mint: [
-      { name: 'tomoji', type: 'address' },
+      { name: 'subject', type: 'address' },
       { name: 'sender', type: 'address' },
       { name: 'amount', type: 'uint256' },
     ],
@@ -65,7 +65,7 @@ const buildMintParams = (
     verifyingContract: tomo,
   },
   value: {
-    tomoji: tomojiAddress,
+    subject: subjectAddress,
     sender: userAddress,
     amount: amount,
   },
