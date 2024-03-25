@@ -153,7 +153,11 @@ contract TomojiFactory is OwnableUpgradeable {
         if (!_canCreateTomoji) {
             revert CantCreateTomoji();
         }
-        if (msg.sender != vars.creator) {
+        if (
+            msg.sender != vars.creator ||
+            vars.maxPerWallet == 0 ||
+            vars.nftTotalSupply == 0
+        ) {
             revert InvaildParam();
         }
         if (vars.nftTotalSupply > _maxNftSupply) {
@@ -165,7 +169,12 @@ contract TomojiFactory is OwnableUpgradeable {
         ) {
             revert ReservedTooMuch();
         }
-        if (vars.maxPerWallet > (vars.nftTotalSupply * 200) / 10000) {
+        uint256 maxPerWallet = (vars.nftTotalSupply * 1) / 100;
+        if (
+            maxPerWallet > 0
+                ? (vars.maxPerWallet > maxPerWallet)
+                : vars.maxPerWallet > 1
+        ) {
             revert MaxPerWalletTooMuch();
         }
         if (vars.preSaleDeadLine > block.timestamp + _maxPreSaleTime) {
