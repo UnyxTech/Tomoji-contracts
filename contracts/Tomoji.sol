@@ -80,7 +80,7 @@ contract Tomoji is ERC404 {
             _tomojiManager,
             (vars.nftTotalSupply - vars.reserved) * units
         );
-        preSaleAmountLeft = (vars.nftTotalSupply - vars.reserved) / 2;
+        preSaleAmountLeft = vars.nftTotalSupply / 2 - vars.reserved;
     }
 
     constructor() payable {

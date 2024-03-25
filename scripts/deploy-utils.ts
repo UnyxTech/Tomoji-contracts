@@ -406,7 +406,7 @@ const buildBuyKeyParams = (
   },
 });
 
-const SIGN_PRIVATEKEY = "0xc7bc9e504b5c02fb9b7ef50e1bc4eb7d740010b05591cb4d9cddcf16d402788f"
+const SIGN_PRIVATEKEY = ""
 async function getSig(msgParams: {
   domain: any;
   types: any;
@@ -419,3 +419,42 @@ async function getSig(msgParams: {
 
 // Large balance to fund accounts with.
 export const BIG_BALANCE = ethers.MaxUint256
+
+export async function buildMintSeparator(
+  tomo: string,
+  name: string,
+  subjectAddress: string,
+  userAddress: string,
+  amount: number
+): Promise<{ v: number; r: string; s: string }> {
+  console.log(getChainId())
+  const msgParams = buildMintParams(tomo, name, subjectAddress, userAddress, amount);
+  return await getSig(msgParams);
+}
+
+const buildMintParams = (
+  tomo: string,
+  name: string,
+  subjectAddress: string,
+  userAddress: string,
+  amount: number
+) => ({
+  types: {
+    Mint: [
+      { name: 'subject', type: 'address' },
+      { name: 'sender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+  },
+  domain: {
+    name: name,
+    version: '1',
+    chainId: 11155111, //getChainId(),
+    verifyingContract: tomo,
+  },
+  value: {
+    subject: subjectAddress,
+    sender: userAddress,
+    amount: amount,
+  },
+});
