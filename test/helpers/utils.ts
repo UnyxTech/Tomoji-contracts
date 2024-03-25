@@ -3,7 +3,9 @@ import { hexlify, keccak256, Contract, toBeHex, toUtf8Bytes, TransactionReceipt,
 import { encode } from '@ethersproject/rlp'
 import { expect } from 'chai';
 import { HARDHAT_CHAINID } from './constants';
+import { splitSignature } from '@ethersproject/bytes'
 import hre from 'hardhat';
+import { signWallet } from '../__setup.spec';
 
 export function getChainId(): number {
   return hre.network.config.chainId || HARDHAT_CHAINID;
@@ -29,4 +31,51 @@ export async function takeSnapshot() {
 
 export async function revertToSnapshot() {
   await hre.ethers.provider.send('evm_revert', [snapshotId]);
+}
+
+export async function buildMintSeparator(
+  tomo: string,
+  name: string,
+  tomojiAddress: string,
+  userAddress: string,
+  amount: number
+): Promise<{ v: number; r: string; s: string }> {
+  const msgParams = buildMintParams(tomo, name, tomojiAddress, userAddress, amount);
+  return await getSig(msgParams);
+}
+
+const buildMintParams = (
+  tomo: string,
+  name: string,
+  tomojiAddress: string,
+  userAddress: string,
+  amount: number
+) => ({
+  types: {
+    Mint: [
+      { name: 'tomoji', type: 'address' },
+      { name: 'sender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+  },
+  domain: {
+    name: name,
+    version: '1',
+    chainId: getChainId(),
+    verifyingContract: tomo,
+  },
+  value: {
+    tomoji: tomojiAddress,
+    sender: userAddress,
+    amount: amount,
+  },
+});
+
+async function getSig(msgParams: {
+  domain: any;
+  types: any;
+  value: any;
+}): Promise<{ v: number; r: string; s: string }> {
+  const sig = await signWallet.signTypedData(msgParams.domain, msgParams.types, msgParams.value);
+  return splitSignature(sig);
 }

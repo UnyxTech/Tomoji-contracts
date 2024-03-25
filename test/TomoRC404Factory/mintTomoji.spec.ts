@@ -16,6 +16,8 @@ import { ERRORS } from '../helpers/errors';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 
 import bn from 'bignumber.js'
+import { buildMintSeparator } from '../helpers/utils';
+
 bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 })
 // returns the sqrt price as a 64x96
 function encodePriceSqrt(reserve1: BigNumberish, reserve0: BigNumberish): BigNumber {
@@ -47,6 +49,7 @@ makeSuiteCleanRoom('Mint ERC404', function () {
     let baseUri = "https://tomo-baseuri/"
     let contractUri = "https://tomo-contract"   
     const tomorrow = parseInt((new Date().getTime() / 1000 ).toFixed(0)) + 24 * 3600
+    const TOMOJI_NAME = 'Tomoji'
 
     context('Generic', function () {
         beforeEach(async function () {
@@ -60,6 +63,7 @@ makeSuiteCleanRoom('Mint ERC404', function () {
                     preSaleDeadLine: tomorrow,
                     sqrtPriceX96: sqrtPriceX96.toBigInt(),
                     sqrtPriceB96: sqrtPriceB96.toBigInt(),
+                    bSupportEOAMint: true,
                     name: name, 
                     symbol: symbol, 
                     baseURI: baseUri, 
@@ -74,18 +78,22 @@ makeSuiteCleanRoom('Mint ERC404', function () {
 
         context('Negatives', function () {
             it('Mint failed if mint amount is 0.',   async function () {
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 0);
+
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                await expect(brc404Contract.mint(0)).to.be.revertedWithCustomError(brc404Contract, ERRORS.InvaildParam)
+                await expect(brc404Contract.mint(0, sig.v, sig.r, sig.s)).to.be.revertedWithCustomError(brc404Contract, ERRORS.InvaildParam)
             });
             it('Mint failed if msg.valur less than you need to pay.',   async function () {
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 2);
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                await expect(brc404Contract.mint(2, {
+                await expect(brc404Contract.mint(2, sig.v, sig.r, sig.s, {
                     value: ethers.parseEther("0.01")
                 })).to.be.revertedWithCustomError(brc404Contract, ERRORS.InvaildParam)
             });
             it('Mint failed if mint amount ReachMaxPerMint.',   async function () {
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 201);
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                await expect(brc404Contract.mint(201, {
+                await expect(brc404Contract.mint(201, sig.v, sig.r, sig.s, {
                     value: ethers.parseEther("200")
                 })).to.be.revertedWithCustomError(brc404Contract, ERRORS.ReachMaxPerMint)
             });
@@ -93,10 +101,12 @@ makeSuiteCleanRoom('Mint ERC404', function () {
 
         context('Scenarios', function () {
             it('Get correct variable if mint Tomo-emoji success.',   async function () {
+                const sig = await buildMintSeparator(tomoErc404Address, TOMOJI_NAME, tomoErc404Address, userAddress, 2);
                 let brc404Contract = Tomoji__factory.connect(tomoErc404Address, user);
-                await expect(brc404Contract.mint(2, {
+                await expect(brc404Contract.mint(2, sig.v, sig.r, sig.s, {
                     value: ethers.parseEther("0.4")
                 })).to.not.be.reverted;
+                
                 expect( await brc404Contract.balanceOf(userAddress)).to.equal(ethers.parseEther("2"));
                 expect( await brc404Contract.erc721BalanceOf(userAddress)).to.equal(2);
                 expect( await brc404Contract.ownerOf(1)).to.equal(userAddress);

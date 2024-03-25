@@ -29,7 +29,11 @@ contract Tomoji is ERC404 {
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
     bytes32 public constant MINT_TYPEHASH =
-        keccak256(abi.encodePacked("Mint(address sender,uint256 amount)"));
+        keccak256(
+            abi.encodePacked(
+                "Mint(address tomoji,address sender,uint256 amount)"
+            )
+        );
 
     address private _tomojiManager;
     uint256 private mintPrice;
@@ -327,7 +331,9 @@ contract Tomoji is ERC404 {
                 abi.encodePacked(
                     "\x19\x01",
                     DOMAIN_SEPARATOR,
-                    keccak256(abi.encode(MINT_TYPEHASH, sender, amount))
+                    keccak256(
+                        abi.encode(MINT_TYPEHASH, address(this), sender, amount)
+                    )
                 )
             );
     }

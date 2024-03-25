@@ -105,6 +105,7 @@ contract TomojiManager is ITomojiManager {
 
         _tomojiSignAddr = tomoSignAddr;
         _maxPreSaleTime = 7 * 24 * 60 * 60;
+        _maxPurchasePercentageForCreator = 1000;
         _maxNftSupply = 100000;
         _protocolPercentage = 1000;
         _protocolFeeAddress = msg.sender;

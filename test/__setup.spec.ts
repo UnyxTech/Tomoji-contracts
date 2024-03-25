@@ -1,6 +1,6 @@
 
 import { expect } from 'chai';
-import { Signer } from 'ethers';
+import { Signer, Wallet } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
 import {
   Tomoji,
@@ -14,12 +14,14 @@ import {
   revertToSnapshot,
   takeSnapshot
 } from './helpers/utils';
+import { SIGN_PRIVATEKEY } from './helpers/constants';
 
 export let accounts: Signer[];
 export let deployer: Signer;
 export let owner: Signer;
 export let user: Signer;
 export let userTwo: Signer;
+export let signer: Signer;
 export let deployerAddress: string;
 export let ownerAddress: string;
 export let userAddress: string;
@@ -27,6 +29,9 @@ export let userTwoAddress: string;
 export let tomojiFactory: TomojiFactory;
 export let tomojiManager: TomojiManager;
 export let tomojiManagerAddr: string;
+export let signerAddr: string;
+
+export let signWallet: Wallet;
 
 export const decimals = 18;
 
@@ -48,11 +53,15 @@ before(async function () {
   owner = accounts[3];
   user = accounts[1];
   userTwo = accounts[2];
+  
+  signWallet = new ethers.Wallet(SIGN_PRIVATEKEY).connect(ethers.provider);
 
   deployerAddress = await deployer.getAddress();
   userAddress = await user.getAddress();
   userTwoAddress = await userTwo.getAddress();
   ownerAddress = await owner.getAddress();
+  signerAddr  = await signWallet.getAddress();
+
 
   const nonce = await deployer.getNonce();
   const TomojiFactoryProxyAddress = computeContractAddress(deployerAddress, nonce + 2);
@@ -63,7 +72,7 @@ before(async function () {
     routerAddr: '0x2626664c2603336E57B271c5C0b26F421741e481',
     uniswapV3NonfungiblePositionManager: '0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1',
   }
-  tomojiManager = await new TomojiManager__factory(deployer).deploy(swapRouter, TomojiFactoryProxyAddress);
+  tomojiManager = await new TomojiManager__factory(deployer).deploy(swapRouter, TomojiFactoryProxyAddress, signerAddr);
   tomojiManagerAddr = await tomojiManager.getAddress()
 
   const TomojiFactory = await ethers.getContractFactory("TomojiFactory");
