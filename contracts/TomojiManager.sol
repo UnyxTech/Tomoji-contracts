@@ -18,6 +18,9 @@ contract TomojiManager is ITomojiManager {
     error X404SwapV3FactoryMismatch();
     error CreatePairFailed();
     error JustCanBeCallByDaoAddress();
+    error OnlyCallByOwner();
+    error ReservedTooMuch();
+    error InvaildParam();
 
     event RemoveLiquidityForEmergece(
         uint256 tokenId,
@@ -41,8 +44,18 @@ contract TomojiManager is ITomojiManager {
         uint256 amount1
     );
 
+    bool private _canCreateTomoji;
+    uint256 private _maxPurchasePercentageForCreator; //defaule 1000 as 10%
+    uint256 private _maxPreSaleTime; //defaule 7 days
+    uint256 private _maxNftSupply; //defaule 100_000
+    uint256 private _protocolPercentage; //default 10% of liquidity reward
+    address private _daoContractAddr;
+    address private _protocolFeeAddress;
+    address private _owner;
+
     DataTypes.SwapRouter private _swapRouter;
     address public _factory;
+    address public _tomojiSignAddr;
 
     modifier onlyFactory() {
         if (msg.sender != _factory) {
@@ -51,15 +64,27 @@ contract TomojiManager is ITomojiManager {
         _;
     }
 
+    modifier onlyOwner() {
+        if (msg.sender != _owner) {
+            revert OnlyCallByOwner();
+        }
+        _;
+    }
+
     receive() external payable {}
 
-    constructor(DataTypes.SwapRouter memory swapRouter, address factory) {
+    constructor(
+        DataTypes.SwapRouter memory swapRouter,
+        address factory,
+        address tomoSignAddr
+    ) {
         address routerAddr = swapRouter.routerAddr;
         address v3NonfungiblePositionManager = swapRouter
             .uniswapV3NonfungiblePositionManager;
         if (
             routerAddr == address(0) ||
-            v3NonfungiblePositionManager == address(0)
+            v3NonfungiblePositionManager == address(0) ||
+            tomoSignAddr == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -77,6 +102,14 @@ contract TomojiManager is ITomojiManager {
 
         _swapRouter = swapRouter;
         _factory = factory;
+
+        _tomojiSignAddr = tomoSignAddr;
+        _maxPreSaleTime = 7 * 24 * 60 * 60;
+        _maxNftSupply = 100000;
+        _protocolPercentage = 1000;
+        _protocolFeeAddress = msg.sender;
+        _daoContractAddr = msg.sender;
+        _canCreateTomoji = true;
     }
 
     function prePairTomojiEnv(
@@ -146,10 +179,8 @@ contract TomojiManager is ITomojiManager {
                     amount1Max: type(uint128).max
                 })
             );
-        address feeAddr = ITomojiFactory(_factory)._protocolFeeAddress();
-        uint256 feePercentage = ITomojiFactory(_factory)._protocolPercentage();
-        uint256 tokenReward = ITomoji(tomojiAddr).balanceOf(address(this));
 
+        uint256 tokenReward = ITomoji(tomojiAddr).balanceOf(address(this));
         address _weth = INonfungiblePositionManager(
             v3NonfungiblePositionManagerAddress
         ).WETH9();
@@ -157,8 +188,12 @@ contract TomojiManager is ITomojiManager {
 
         address creator = ITomoji(tomojiAddr).owner();
         if (tokenReward > 0) {
-            uint256 feeProtocol = (tokenReward * feePercentage) / 10000;
-            TransferHelper.erc20Transfer(tomojiAddr, feeAddr, feeProtocol);
+            uint256 feeProtocol = (tokenReward * _protocolPercentage) / 10000;
+            TransferHelper.erc20Transfer(
+                tomojiAddr,
+                _protocolFeeAddress,
+                feeProtocol
+            );
             TransferHelper.erc20Transfer(
                 tomojiAddr,
                 creator,
@@ -167,8 +202,10 @@ contract TomojiManager is ITomojiManager {
         }
         if (ethReward > 0) {
             IWETH9(_weth).withdraw(ethReward);
-            uint256 feeProtocol = (ethReward * feePercentage) / 10000;
-            (bool success, ) = payable(feeAddr).call{value: feeProtocol}("");
+            uint256 feeProtocol = (ethReward * _protocolPercentage) / 10000;
+            (bool success, ) = payable(_protocolFeeAddress).call{
+                value: feeProtocol
+            }("");
             (bool success1, ) = payable(creator).call{
                 value: ethReward - feeProtocol
             }("");
@@ -223,11 +260,65 @@ contract TomojiManager is ITomojiManager {
         return true;
     }
 
-    function setFactory(address factory) public {
+    function setMaxReservePercentage(
+        uint256 newPurchasePercentage
+    ) public onlyOwner {
+        if (newPurchasePercentage > 5000) {
+            revert ReservedTooMuch();
+        }
+        _maxPurchasePercentageForCreator = newPurchasePercentage;
+    }
+
+    function setMaxPreSaleTime(uint256 newMaxPreSaleTime) public onlyOwner {
+        _maxPreSaleTime = newMaxPreSaleTime;
+    }
+
+    function setProtocolFeeAddress(address newAddress) public onlyOwner {
+        if (newAddress == address(0)) {
+            revert ZeroAddress();
+        }
+        _protocolFeeAddress = newAddress;
+    }
+
+    function setProtocolFeePercentage(uint256 newPercentage) public onlyOwner {
+        if (newPercentage > 10000) {
+            revert InvaildParam();
+        }
+        _protocolPercentage = newPercentage;
+    }
+
+    function setDaoContractAddr(address newAddr) public onlyOwner {
+        if (newAddr == address(0)) {
+            revert ZeroAddress();
+        }
+        _daoContractAddr = newAddr;
+    }
+
+    function setCreateTomoji(bool canCreate) public onlyOwner {
+        if (_canCreateTomoji == canCreate) {
+            revert InvaildParam();
+        }
+        _canCreateTomoji = canCreate;
+    }
+
+    function setFactory(address factory) public onlyOwner {
         if (factory == address(0)) {
             revert ZeroAddress();
         }
         _factory = factory;
+    }
+
+    function getCreatTomojiParam()
+        public
+        view
+        returns (bool, uint256, uint256, uint256)
+    {
+        return (
+            _canCreateTomoji,
+            _maxNftSupply,
+            _maxPurchasePercentageForCreator,
+            _maxPreSaleTime
+        );
     }
 
     function getSwapRouter() public view returns (address, address) {

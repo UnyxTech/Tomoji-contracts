@@ -75,11 +75,11 @@ abstract contract ERC404 is IERC404 {
         }
     }
 
-    function owned(
-        address owner_
-    ) public view virtual returns (uint256[] memory) {
-        return _owned[owner_];
-    }
+    // function owned(
+    //     address owner_
+    // ) public view virtual returns (uint256[] memory) {
+    //     return _owned[owner_];
+    // }
 
     function erc721BalanceOf(
         address owner_
@@ -93,30 +93,30 @@ abstract contract ERC404 is IERC404 {
         return balanceOf[owner_];
     }
 
-    function erc20TotalSupply() public view virtual returns (uint256) {
-        return totalSupply;
-    }
+    // function erc20TotalSupply() public view virtual returns (uint256) {
+    //     return totalSupply;
+    // }
 
-    function erc721TotalSupply() public view virtual returns (uint256) {
-        return minted - _storedERC721Ids.length();
-    }
+    // function erc721TotalSupply() public view virtual returns (uint256) {
+    //     return minted - _storedERC721Ids.length();
+    // }
 
-    function getERC721TokensInQueue(
-        uint256 start_,
-        uint256 count_
-    ) public view virtual returns (uint256[] memory) {
-        uint256[] memory tokensInQueue = new uint256[](count_);
+    // function getERC721TokensInQueue(
+    //     uint256 start_,
+    //     uint256 count_
+    // ) public view virtual returns (uint256[] memory) {
+    //     uint256[] memory tokensInQueue = new uint256[](count_);
 
-        for (uint256 i = start_; i < start_ + count_; ) {
-            tokensInQueue[i - start_] = _storedERC721Ids.at(i);
+    //     for (uint256 i = start_; i < start_ + count_; ) {
+    //         tokensInQueue[i - start_] = _storedERC721Ids.at(i);
 
-            unchecked {
-                ++i;
-            }
-        }
+    //         unchecked {
+    //             ++i;
+    //         }
+    //     }
 
-        return tokensInQueue;
-    }
+    //     return tokensInQueue;
+    // }
 
     /// @notice tokenURI must be implemented by child contract
     function tokenURI(uint256 id_) public view virtual returns (string memory);

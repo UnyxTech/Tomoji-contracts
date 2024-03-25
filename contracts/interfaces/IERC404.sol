@@ -31,7 +31,7 @@ interface IERC404 is IERC165 {
 
     function totalSupply() external view returns (uint256);
 
-    function erc721TotalSupply() external view returns (uint256);
+    //function erc721TotalSupply() external view returns (uint256);
 
     function balanceOf(address owner_) external view returns (uint256);
 

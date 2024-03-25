@@ -39,13 +39,6 @@ contract TomojiFactory is OwnableUpgradeable {
     mapping(address => mapping(string => address)) public _erc404Contract;
     DataTypes.CreateTomojiParameters private _parameters;
     address public _tomojiManager;
-    uint256 private _maxPurchasePercentageForCreator; //defaule 1000 as 10%
-    uint256 private _maxPreSaleTime; //defaule 7 days
-    uint256 private _maxNftSupply; //defaule 100_000
-    address public _protocolFeeAddress;
-    uint256 public _protocolPercentage; //default 10% of liquidity reward
-    address public _daoContractAddr;
-    bool private _canCreateTomoji;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -62,13 +55,6 @@ contract TomojiFactory is OwnableUpgradeable {
         __Ownable_init(owner);
 
         _tomojiManager = tomojiManager;
-        _maxPurchasePercentageForCreator = 1000;
-        _maxPreSaleTime = 7 * 24 * 60 * 60;
-        _maxNftSupply = 100000;
-        _protocolPercentage = 1000;
-        _protocolFeeAddress = owner;
-        _daoContractAddr = owner;
-        _canCreateTomoji = true;
     }
 
     function createTomoji(
@@ -139,52 +125,11 @@ contract TomojiFactory is OwnableUpgradeable {
         return true;
     }
 
-    function setMaxReservePercentage(
-        uint256 newPurchasePercentage
-    ) public onlyOwner {
-        if (newPurchasePercentage > 5000) {
-            revert ReservedTooMuch();
-        }
-        _maxPurchasePercentageForCreator = newPurchasePercentage;
-    }
-
-    function setMaxPreSaleTime(uint256 newMaxPreSaleTime) public onlyOwner {
-        _maxPreSaleTime = newMaxPreSaleTime;
-    }
-
-    function setProtocolFeeAddress(address newAddress) public onlyOwner {
-        if (newAddress == address(0)) {
-            revert ZeroAddress();
-        }
-        _protocolFeeAddress = newAddress;
-    }
-
-    function setProtocolFeePercentage(uint256 newPercentage) public onlyOwner {
-        if (newPercentage > 10000) {
-            revert InvaildParam();
-        }
-        _protocolPercentage = newPercentage;
-    }
-
-    function setDaoContractAddr(address newAddr) public onlyOwner {
-        if (newAddr == address(0)) {
-            revert ZeroAddress();
-        }
-        _daoContractAddr = newAddr;
-    }
-
     function setTomojiManager(address newAddr) public onlyOwner {
         if (newAddr == address(0)) {
             revert ZeroAddress();
         }
         _tomojiManager = newAddr;
-    }
-
-    function setCreateTomoji(bool canCreate) public onlyOwner {
-        if (_canCreateTomoji == canCreate) {
-            revert InvaildParam();
-        }
-        _canCreateTomoji = canCreate;
     }
 
     function parameters()
@@ -198,6 +143,13 @@ contract TomojiFactory is OwnableUpgradeable {
     function _checkParam(
         DataTypes.CreateTomojiParameters calldata vars
     ) internal view {
+        (
+            bool _canCreateTomoji,
+            uint256 _maxNftSupply,
+            uint256 _maxPurchasePercentageForCreator,
+            uint256 _maxPreSaleTime
+        ) = ITomojiManager(_tomojiManager).getCreatTomojiParam();
+
         if (!_canCreateTomoji) {
             revert CantCreateTomoji();
         }
