@@ -39,13 +39,13 @@ contract TomojiFactory is OwnableUpgradeable {
     mapping(address => mapping(string => address)) public _erc404Contract;
     DataTypes.CreateTomojiParameters private _parameters;
     address public _tomojiManager;
-    uint256 public _maxPurchasePercentageForCreator; //defaule 1000 as 10%
-    uint256 public _maxPreSaleTime; //defaule 7 days
-    uint256 public _maxNftSupply; //defaule 100_000
+    uint256 private _maxPurchasePercentageForCreator; //defaule 1000 as 10%
+    uint256 private _maxPreSaleTime; //defaule 7 days
+    uint256 private _maxNftSupply; //defaule 100_000
     address public _protocolFeeAddress;
     uint256 public _protocolPercentage; //default 10% of liquidity reward
     address public _daoContractAddr;
-    bool public _canCreateTomoji;
+    bool private _canCreateTomoji;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
