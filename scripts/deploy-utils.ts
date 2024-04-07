@@ -449,7 +449,7 @@ const buildMintParams = (
   domain: {
     name: name,
     version: '1',
-    chainId: 11155111, //getChainId(),
+    chainId: getChainId(),
     verifyingContract: tomo,
   },
   value: {
