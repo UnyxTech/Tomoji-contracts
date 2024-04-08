@@ -111,6 +111,7 @@ contract TomojiManager is ITomojiManager {
         _protocolPercentage = 1000;
         _protocolFeeAddress = msg.sender;
         _daoContractAddr = msg.sender;
+        _owner = msg.sender;
         _canCreateTomoji = true;
     }
 
