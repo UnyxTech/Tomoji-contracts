@@ -72,7 +72,7 @@ before(async function () {
     routerAddr: '0x2626664c2603336E57B271c5C0b26F421741e481',
     uniswapV3NonfungiblePositionManager: '0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1',
   }
-  tomojiManager = await new TomojiManager__factory(deployer).deploy(swapRouter, TomojiFactoryProxyAddress, signerAddr);
+  tomojiManager = await new TomojiManager__factory(deployer).deploy(swapRouter, TomojiFactoryProxyAddress);
   tomojiManagerAddr = await tomojiManager.getAddress()
 
   const TomojiFactory = await ethers.getContractFactory("TomojiFactory");

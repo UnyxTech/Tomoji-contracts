@@ -23,18 +23,6 @@ contract Tomoji is ERC404 {
     error TradingNotEnable();
     error SignatureInvalid();
 
-    bytes32 private constant DOMAIN_NAME = keccak256("Tomoji");
-    bytes32 public constant DOMAIN_TYPEHASH =
-        keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        );
-    bytes32 public constant MINT_TYPEHASH =
-        keccak256(
-            abi.encodePacked(
-                "Mint(address subject,address sender,uint256 amount)"
-            )
-        );
-
     address private _tomojiManager;
     uint256 private mintPrice;
     string public contractURI;
@@ -44,8 +32,6 @@ contract Tomoji is ERC404 {
     address private creator;
     string private baseTokenURI;
     bool private enableTrading;
-    bool private bSupportEOAMint;
-    bytes32 private DOMAIN_SEPARATOR;
 
     mapping(address => uint) private mintAccount;
     address private immutable factory;
@@ -68,7 +54,6 @@ contract Tomoji is ERC404 {
         preSaleDeadLine = vars.preSaleDeadLine;
         name = vars.name;
         symbol = vars.symbol;
-        bSupportEOAMint = vars.bSupportEOAMint;
 
         _erc721TransferExempt[creator] = true;
         _erc721TransferExempt[_tomojiManager] = true;
@@ -104,20 +89,6 @@ contract Tomoji is ERC404 {
         allowance[_tomojiManager][v3NonfungiblePositionManagerAddress] = type(
             uint256
         ).max;
-
-        uint256 chainId;
-        assembly {
-            chainId := chainid()
-        }
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                DOMAIN_TYPEHASH,
-                DOMAIN_NAME,
-                keccak256(bytes("1")),
-                chainId,
-                address(this)
-            )
-        );
     }
 
     function multiTransfer(
@@ -131,16 +102,7 @@ contract Tomoji is ERC404 {
         return true;
     }
 
-    function mint(
-        uint256 mintAmount_,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public payable virtual returns (bool) {
-        if (bSupportEOAMint) {
-            recover(buildMintSeparator(msg.sender, mintAmount_), v, r, s);
-        }
-
+    function mint(uint256 mintAmount_) public payable virtual returns (bool) {
         if (preSaleAmountLeft == 0) {
             revert SoldOut();
         }
@@ -302,39 +264,5 @@ contract Tomoji is ERC404 {
             revert TradingNotEnable();
         }
         super._transferERC20(from_, to_, value_);
-    }
-
-    function recover(
-        bytes32 hash,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public view returns (bool) {
-        address recoveredAddress = ecrecover(hash, v, r, s);
-        address tomojiSignAddr = ITomojiManager(_tomojiManager)
-            ._tomojiSignAddr();
-
-        if (
-            recoveredAddress == address(0) || recoveredAddress != tomojiSignAddr
-        ) {
-            revert SignatureInvalid();
-        }
-        return true;
-    }
-
-    function buildMintSeparator(
-        address sender,
-        uint256 amount
-    ) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    DOMAIN_SEPARATOR,
-                    keccak256(
-                        abi.encode(MINT_TYPEHASH, creator, sender, amount)
-                    )
-                )
-            );
     }
 }

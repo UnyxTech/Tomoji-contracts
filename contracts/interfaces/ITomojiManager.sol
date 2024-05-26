@@ -16,16 +16,8 @@ interface ITomojiManager {
         uint256 tokenAmount
     ) external payable returns (bool);
 
-    function removeLiquidityForEmergece(
-        uint256 tokenId,
-        uint128 liquidity,
-        address receiptAddress
-    ) external payable returns (bool);
-
     function getCreatTomojiParam()
         external
         view
         returns (bool, uint256, uint256, uint256);
-
-    function _tomojiSignAddr() external view returns (address);
 }

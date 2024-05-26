@@ -35,13 +35,12 @@ makeSuiteCleanRoom('create ERC404', function () {
                 await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
-                    reserved: 10001,
+                    reserved: 1001,
                     maxPerWallet: 100,
                     price: mintPrice,
                     preSaleDeadLine: tomorrow,
                     sqrtPriceX96: sqrtPriceX96.toBigInt(),
                     sqrtPriceB96: sqrtPriceB96.toBigInt(),
-                    bSupportEOAMint: true,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -59,12 +58,11 @@ makeSuiteCleanRoom('create ERC404', function () {
                     preSaleDeadLine: tomorrow,
                     sqrtPriceX96: sqrtPriceX96.toBigInt(),
                     sqrtPriceB96: sqrtPriceB96.toBigInt(),
-                    bSupportEOAMint: true,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
                     contractURI: "https://tomo-contract"
-                })).to.be.not.reverted;
+                })).to.be.not.reverted
                 await expect(tomojiFactory.connect(owner).createTomoji({
                     creator: ownerAddress, 
                     nftTotalSupply: 10000,
@@ -74,7 +72,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                     preSaleDeadLine: tomorrow,
                     sqrtPriceX96: sqrtPriceX96.toBigInt(),
                     sqrtPriceB96: sqrtPriceB96.toBigInt(),
-                    bSupportEOAMint: true,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -94,7 +91,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                     preSaleDeadLine: tomorrow,
                     sqrtPriceX96: sqrtPriceX96.toBigInt(),
                     sqrtPriceB96: sqrtPriceB96.toBigInt(),
-                    bSupportEOAMint: true,
                     name: "MoMo", 
                     symbol: "Momo", 
                     baseURI: "https://tomo-baseuri/", 
@@ -107,7 +103,7 @@ makeSuiteCleanRoom('create ERC404', function () {
                 let nftTotalSupply = 10000
                 let reserved0 = 0
                 let reserved1 = 1000
-                let maxPerWallet = 200
+                let maxPerWallet = 100
                 let price0 = 0
                 let price1 = mintPrice
                 let name = "Tomo-emoji"
@@ -124,7 +120,6 @@ makeSuiteCleanRoom('create ERC404', function () {
                         preSaleDeadLine: tomorrow,
                         sqrtPriceX96: sqrtPriceX96.toBigInt(),
                         sqrtPriceB96: sqrtPriceB96.toBigInt(),
-                        bSupportEOAMint: true,
                         name: name, 
                         symbol: symbol, 
                         baseURI: baseUri, 

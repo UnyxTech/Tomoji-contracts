@@ -18,7 +18,6 @@ library DataTypes {
         uint256 preSaleDeadLine;
         uint160 sqrtPriceX96;
         uint160 sqrtPriceB96;
-        bool bSupportEOAMint;
         string name;
         string symbol;
         string baseURI;

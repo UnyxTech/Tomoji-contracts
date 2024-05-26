@@ -10,8 +10,9 @@ import {ITomoji} from "./interfaces/ITomoji.sol";
 import {IWETH9} from "./interfaces/IWETH9.sol";
 import {ITomojiFactory} from "./interfaces/ITomojiFactory.sol";
 import {TransferHelper} from "./libraries/TransferHelper.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract TomojiManager is ITomojiManager {
+contract TomojiManager is ITomojiManager, Ownable {
     error OnlyCallByFactory();
     error SendETHFailed();
     error ZeroAddress();
@@ -50,13 +51,10 @@ contract TomojiManager is ITomojiManager {
     uint256 public _maxPreSaleTime; //defaule 7 days
     uint256 public _maxNftSupply; //defaule 100_000
     uint256 public _protocolPercentage; //default 10% of liquidity reward
-    address public _daoContractAddr;
     address public _protocolFeeAddress;
-    address public _owner;
 
     DataTypes.SwapRouter private _swapRouter;
     address public _factory;
-    address public _tomojiSignAddr;
 
     modifier onlyFactory() {
         if (msg.sender != _factory) {
@@ -65,27 +63,18 @@ contract TomojiManager is ITomojiManager {
         _;
     }
 
-    modifier onlyOwner() {
-        if (msg.sender != _owner) {
-            revert OnlyCallByOwner();
-        }
-        _;
-    }
-
     receive() external payable {}
 
     constructor(
         DataTypes.SwapRouter memory swapRouter,
-        address factory,
-        address tomoSignAddr
-    ) {
+        address factory
+    ) Ownable(msg.sender) {
         address routerAddr = swapRouter.routerAddr;
         address v3NonfungiblePositionManager = swapRouter
             .uniswapV3NonfungiblePositionManager;
         if (
             routerAddr == address(0) ||
-            v3NonfungiblePositionManager == address(0) ||
-            tomoSignAddr == address(0)
+            v3NonfungiblePositionManager == address(0)
         ) {
             revert ZeroAddress();
         }
@@ -104,14 +93,11 @@ contract TomojiManager is ITomojiManager {
         _swapRouter = swapRouter;
         _factory = factory;
 
-        _tomojiSignAddr = tomoSignAddr;
         _maxPreSaleTime = 7 * 24 * 60 * 60;
         _maxPurchasePercentageForCreator = 1000;
         _maxNftSupply = 100000;
-        _protocolPercentage = 1000;
+        _protocolPercentage = 5000;
         _protocolFeeAddress = msg.sender;
-        _daoContractAddr = msg.sender;
-        _owner = msg.sender;
         _canCreateTomoji = true;
     }
 
@@ -223,49 +209,6 @@ contract TomojiManager is ITomojiManager {
         emit CollectLiquidityReward(tomojiAddr, tokenId, amount0, amount1);
     }
 
-    /// remove liquidity for emergece, just call by DAO
-    /**
-     *
-     * @param tokenId position nft id
-     * @param liquidity liquidity amount
-     * @param receiptAddress receiptAddress to receive token and weth
-     * Be care of receiptAddress, if it's a contract, it must have ablity to do with token and weth
-     */
-    function removeLiquidityForEmergece(
-        uint256 tokenId,
-        uint128 liquidity,
-        address receiptAddress
-    ) external payable override returns (bool) {
-        if (msg.sender != _daoContractAddr) {
-            revert JustCanBeCallByDaoAddress();
-        }
-        address v3NonfungiblePositionManagerAddress = _swapRouter
-            .uniswapV3NonfungiblePositionManager;
-        INonfungiblePositionManager(v3NonfungiblePositionManagerAddress)
-            .decreaseLiquidity(
-                INonfungiblePositionManager.DecreaseLiquidityParams({
-                    tokenId: tokenId,
-                    liquidity: liquidity,
-                    amount0Min: 0,
-                    amount1Min: 0,
-                    deadline: block.timestamp
-                })
-            );
-
-        (uint256 amount0, uint256 amount1) = INonfungiblePositionManager(
-            v3NonfungiblePositionManagerAddress
-        ).collect(
-                INonfungiblePositionManager.CollectParams({
-                    tokenId: tokenId,
-                    recipient: receiptAddress,
-                    amount0Max: type(uint128).max,
-                    amount1Max: type(uint128).max
-                })
-            );
-        emit RemoveLiquidityForEmergece(tokenId, liquidity, amount0, amount1);
-        return true;
-    }
-
     function setMaxReservePercentage(
         uint256 newPurchasePercentage
     ) public onlyOwner {
@@ -291,13 +234,6 @@ contract TomojiManager is ITomojiManager {
             revert InvaildParam();
         }
         _protocolPercentage = newPercentage;
-    }
-
-    function setDaoContractAddr(address newAddr) public onlyOwner {
-        if (newAddr == address(0)) {
-            revert ZeroAddress();
-        }
-        _daoContractAddr = newAddr;
     }
 
     function setCreateTomoji(bool canCreate) public onlyOwner {
