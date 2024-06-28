@@ -38,7 +38,6 @@ async function main() {
     preSaleDeadLine: tomorrow,
     sqrtPriceX96: sqrtPriceX96.toBigInt(),
     sqrtPriceB96: sqrtPriceB96.toBigInt(),
-    bSupportEOAMint: true,
     name: "MoMonkey", 
     symbol: "MoMk", 
     baseURI: "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/", 

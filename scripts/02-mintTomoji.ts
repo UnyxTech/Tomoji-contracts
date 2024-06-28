@@ -23,7 +23,7 @@ async function main() {
   const TOMOJI_NAME = 'Tomoji'
   const sig = await buildMintSeparator(tomojiAddr, TOMOJI_NAME, deployer.address, owner.address, 1);
 
-  const mintTx = await tomojiContract.connect(owner).mint(1, sig.v, sig.r, sig.s, {value: ethers.parseEther("0.0001")});
+  const mintTx = await tomojiContract.connect(owner).mint(1, {value: ethers.parseEther("0.0001")});
   await mintTx.wait()
   await delay(2000)
 
